@@ -47,12 +47,12 @@ print('%s Initialized screen' % datetime.datetime.now())
 # Objects we need to draw things
 icons = ImageFont.truetype('materialdesignicons-webfont.ttf', ICON_SIZE)
 text = ImageFont.truetype('BebasNeue.ttf', ICON_SIZE)
+small_text = ImageFont.truetype('BebasNeue.ttf', ICON_SIZE / 2)
+giant_text = ImageFont.truetype('BebasNeue.ttf', int(ICON_SIZE * 1.3))
 
 images = {}
 images['logo'] = Image.open('gangscan.jpeg').convert('RGBA')
-images['logo'] = images['logo'].rotate(90,
-                                       resample=0,
-                                       expand=1).resize((240, 320))
+images['logo'] = images['logo'].resize((320, 240))
 print('%s Loaded logo' % datetime.datetime.now())
 
 for (icon_name, icon, font, inset) in [
@@ -68,7 +68,7 @@ for (icon_name, icon, font, inset) in [
     img_writer.text(((ICON_SIZE - width) / 2 + 5, inset + 5),
                     icon, fill='black', font=font)
 
-    images[icon_name] = img.rotate(90, resample=0, expand=1)
+    images[icon_name] = img
     print(images[icon_name])
     print('%s Loaded %s icon' %(datetime.datetime.now(), icon_name))
 
@@ -76,6 +76,42 @@ status = images['logo']
 status = Image.alpha_composite(status, images['wifi_on'])
 status = Image.alpha_composite(status, images['connect_on'])
 status = Image.alpha_composite(status, images['out'])
-TFT.display(status)
+
+now = datetime.datetime.now()
+print('%s %02d:%02d - 192.168.1.136 - 42 events queued'
+      %(datetime.datetime.now(), now.hour, now.minute))
+status_writer = ImageDraw.Draw(status)
+
+# Time
+status_writer.text((5, 240 - (ICON_SIZE / 2) - 5),
+                   '%02d:%02d' % (now.hour, now.minute),
+                   fill='black',
+                   font=small_text)
+
+# Queue size
+width, height = status_writer.textsize('42 queued', font=small_text)
+status_writer.text((320 - width - 5, 240 - (ICON_SIZE / 2) - 5),
+                   '42 queued',
+                   fill='black',
+                   font=small_text)
+
+# Network address
+width, height = status_writer.textsize('192.168.1.136', font=small_text)
+status_writer.text(((320 - width) / 2, 240 - (ICON_SIZE / 2) - 5),
+                   '192.168.1.136',
+                   fill='black',
+                   font=small_text)
+
+# Scanned person
+width, height = status_writer.textsize('Michael Still', font=giant_text)
+status_writer.rectangle((160 - width / 2 - 5, 120 - height / 2 - 5,
+                         160 + width / 2 + 5, 120 + height / 2 + 5),
+                        fill='white')
+status_writer.text(((320 - width) / 2, (240 - height) / 2),
+                   'Michael Still',
+                   fill='green',
+                   font=giant_text)
+
+TFT.display(status.rotate(90, resample=0, expand=1))
 
 time.sleep(60)
