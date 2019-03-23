@@ -14,6 +14,8 @@
 # A demo of LCD/TFT SCREEN DISPLAY
 
 import datetime
+import re
+import subprocess
 import time
 import RPi.GPIO as GPIO
 
@@ -31,6 +33,7 @@ LED = 23
 
 # Constants
 ICON_SIZE = 30
+INET_RE = re.compile(' +inet ([^ ]+) .*')
 
 print('%s Started' % datetime.datetime.now())
 
@@ -72,46 +75,62 @@ for (icon_name, icon, font, inset) in [
     print(images[icon_name])
     print('%s Loaded %s icon' %(datetime.datetime.now(), icon_name))
 
-status = images['logo']
-status = Image.alpha_composite(status, images['wifi_on'])
-status = Image.alpha_composite(status, images['connect_on'])
-status = Image.alpha_composite(status, images['out'])
+while True:
+    status = images['logo']
 
-now = datetime.datetime.now()
-print('%s %02d:%02d - 192.168.1.136 - 42 events queued'
-      %(datetime.datetime.now(), now.hour, now.minute))
-status_writer = ImageDraw.Draw(status)
+    # Determine IP address
+    ipaddress = None
+    ifconfig = subprocess.check_output('/sbin/ifconfig wlan0', shell=True)
+    for line in ifconfig.split('\n'):
+        print('%s ifconfig: %s' %(datetime.datetime.now(), line))
+        m = INET_RE.match(line)
+        if m:
+            ipaddress = m.group(1)
+            print('%s ipaddress is %s' %(datetime.datetime.now(), ipaddress))
+            status = Image.alpha_composite(status, images['wifi_on'])
 
-# Time
-status_writer.text((5, 240 - (ICON_SIZE / 2) - 5),
-                   '%02d:%02d' % (now.hour, now.minute),
-                   fill='black',
-                   font=small_text)
+    if not ipaddress:
+        ipaddress = '...'
+        status = Image.alpha_composite(status, images['wifi_off'])
 
-# Queue size
-width, height = status_writer.textsize('42 queued', font=small_text)
-status_writer.text((320 - width - 5, 240 - (ICON_SIZE / 2) - 5),
-                   '42 queued',
-                   fill='black',
-                   font=small_text)
+    status = Image.alpha_composite(status, images['connect_on'])
+    status = Image.alpha_composite(status, images['out'])
 
-# Network address
-width, height = status_writer.textsize('192.168.1.136', font=small_text)
-status_writer.text(((320 - width) / 2, 240 - (ICON_SIZE / 2) - 5),
-                   '192.168.1.136',
-                   fill='black',
-                   font=small_text)
+    now = datetime.datetime.now()
+    status_writer = ImageDraw.Draw(status)
 
-# Scanned person
-width, height = status_writer.textsize('Michael Still', font=giant_text)
-status_writer.rectangle((160 - width / 2 - 5, 120 - height / 2 - 5,
-                         160 + width / 2 + 5, 120 + height / 2 + 5),
-                        fill='white')
-status_writer.text(((320 - width) / 2, (240 - height) / 2),
-                   'Michael Still',
-                   fill='green',
-                   font=giant_text)
+    # Display time
+    status_writer.text((5, 240 - (ICON_SIZE / 2) - 5),
+                       '%02d:%02d' % (now.hour, now.minute),
+                       fill='black',
+                       font=small_text)
 
-TFT.display(status.rotate(90, resample=0, expand=1))
+    # Display queue size
+    width, height = status_writer.textsize('42 queued', font=small_text)
+    status_writer.text((320 - width - 5, 240 - (ICON_SIZE / 2) - 5),
+                       '42 queued',
+                       fill='black',
+                       font=small_text)
 
-time.sleep(60)
+    # Display network address
+    width, height = status_writer.textsize(ipaddress, font=small_text)
+    status_writer.text(((320 - width) / 2, 240 - (ICON_SIZE / 2) - 5),
+                       ipaddress,
+                       fill='black',
+                       font=small_text)
+
+    # Display recently scanned person
+    width, height = status_writer.textsize('Michael Still', font=giant_text)
+    status_writer.rectangle((160 - width / 2 - 5, 120 - height / 2 - 5,
+                             160 + width / 2 + 5, 120 + height / 2 + 5),
+                            fill='white')
+    status_writer.text(((320 - width) / 2, (240 - height) / 2),
+                       'Michael Still',
+                       fill='green',
+                       font=giant_text)
+
+    print('%s %s - 42 events queued'
+          %(datetime.datetime.now(), ipaddress))
+    TFT.display(status.rotate(90, resample=0, expand=1))
+
+    time.sleep(5)

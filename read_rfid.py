@@ -5,7 +5,7 @@ import sys
 import RPi.GPIO as GPIO
 from mfrc522 import SimpleMFRC522
 
-reader = SimpleMFRC522(bus=1, device=0, nrstpd=22)
+reader = SimpleMFRC522(bus=1, device=0, nrstpd=35)
 
 try:
     cardid, text = reader.read()
