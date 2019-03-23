@@ -1,0 +1,2 @@
+spidev
+mfrc522    # note that we're carrying a patch for this one at the moment
