@@ -33,6 +33,7 @@ try:
                           'owner': owner,
                           'sha': sig,
                           'outcome': outcome})
+        sys.stdout.flush()
 
 finally:
     GPIO.cleanup()
