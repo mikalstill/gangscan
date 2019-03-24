@@ -12,6 +12,7 @@ reader = SimpleMFRC522(bus=1, device=0, nrstpd=36)
 with open('config.json') as f:
     config = json.loads(f.read())
 
+last_read = None
 try:
     while True:
         cardid, text = reader.read()
@@ -29,11 +30,15 @@ try:
         if s != sig:
             outcome = False
 
-        print json.dumps({'cardid': cardid,
-                          'owner': owner,
-                          'sha': sig,
-                          'outcome': outcome})
-        sys.stdout.flush()
+        data = {'cardid': cardid,
+                'owner': owner,
+                'sha': sig,
+                'outcome': outcome}
+
+        if last_read != data:
+            print json.dumps(data)
+            sys.stdout.flush()
+            last_read = data
 
 finally:
     GPIO.cleanup()

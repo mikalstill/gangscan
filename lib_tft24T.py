@@ -21,6 +21,7 @@ margin = 13
 
 import numbers
 import time
+import numpy as np
 
 from PIL import Image
 from PIL import ImageDraw
@@ -244,26 +245,20 @@ class TFT24T():
         same dimensions as the display hardware.
         """
         # By default write the internal buffer to the display.
-        start = time.time()
         if image is None:
             image = Buffer
         if image.size[0] == 320:
             image = image.rotate(90)
-        print('Preparing image took %.02f seconds' %(time.time() - start))
 
         # Set address bounds to entire display.
         start = time.time()
         self.set_frame()
 
         # Convert image to array of 16bit 565 RGB data bytes.
-        start = time.time()
         pixelbytes = list(self.image_to_data(image))
-        print('Converting to bytes took %.02f seconds' %(time.time() - start))
 
         # Write data to hardware.
-        start = time.time()
         self.data(pixelbytes)
-        print('Painting image took %.02f seconds' %(time.time() - start))
 
     def penprint(self, position, size, color=(0,0,0) ):
         x=position[0]
@@ -329,20 +324,11 @@ class TFT24T():
 
     def image_to_data(self, image):
         """Generator function to convert a PIL image to 16-bit 565 RGB bytes."""
-        # Source of this code: Adafruit ILI9341 python project
-        start = time.time()
-        pixels = image.convert('RGB').load()
-        print('Getting pixels took %.02f seconds' %(time.time() - start))
-        width, height = image.size
-
-        start = time.time()
-        for y in range(height):
-            for x in range(width):
-                r,g,b = pixels[(x,y)]
-                color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
-                yield (color >> 8) & 0xFF
-                yield color & 0xFF
-        print('Transcode took %.02f seconds' %(time.time() - start))
+        #NumPy is much faster at doing this. NumPy code provided by:
+        #Keith (https://www.blogger.com/profile/02555547344016007163)
+        pb = np.array(image.convert('RGB')).astype('uint16')
+        color = ((pb[:,:,0] & 0xF8) << 8) | ((pb[:,:,1] & 0xFC) << 3) | (pb[:,:,2] >> 3)
+        return np.dstack(((color >> 8) & 0xFF, color & 0xFF)).flatten().tolist()
 
 
     def textdirect(self, pos, text, font, fill="white"):
