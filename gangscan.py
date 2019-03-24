@@ -39,9 +39,11 @@ LED = 23
 ICON_SIZE = 30
 INET_RE = re.compile(' +inet ([^ ]+) .*')
 
-NAME_LINGER_TIME = 10
-
 print('%s Started' % datetime.datetime.now())
+
+# Read config
+with open('config.json') as f:
+    config = json.loads(f.read())
 
 # Setup GPIO
 GPIO.setmode(GPIO.BCM)
@@ -184,7 +186,7 @@ try:
                                font=small_text)
 
             # Display recently scanned person
-            if time.time() - last_scanned_time < NAME_LINGER_TIME:
+            if time.time() - last_scanned_time < config['name-linger']:
                 width, height = status_writer.textsize(
                     last_scanned, font=giant_text)
                 status_writer.rectangle(
