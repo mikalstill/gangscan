@@ -1,4 +1,7 @@
 {
+    "device-name": "gangscan1",
+    "location": "out",
     "name-linger": 5,
-    "pre-shared-key": "gangshow2019"
+    "pre-shared-key": "gangshow2019",
+    "server": "http://127.0.0.1:5000"
 }

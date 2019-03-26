@@ -14,19 +14,24 @@
 # A demo of LCD/TFT SCREEN DISPLAY
 
 import datetime
+import hashlib
 import json
 import os
 import psutil
 import re
+import requests
 import select
 import subprocess
 import time
+import uuid
+
 import RPi.GPIO as GPIO
 
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
+import filequeue
 from lib_tft24T import TFT24T
 import spidev
 
@@ -44,6 +49,7 @@ print('%s Started' % datetime.datetime.now())
 # Read config
 with open('config.json') as f:
     config = json.loads(f.read())
+queue = filequeue.FileQueue('gangscan-%s' % config['device-name'])
 
 # Setup GPIO
 GPIO.setmode(GPIO.BCM)
@@ -56,8 +62,12 @@ TFT.clear((125, 255, 125))
 print('%s Initialized screen' % datetime.datetime.now())
 
 # Update clock
-subprocess.check_output('sudo ntpdate -s time.nist.gov', shell=True)
-print('%s Updated clock' % datetime.datetime.now())
+try:
+    subprocess.check_output('sudo ntpdate -s time.nist.gov', shell=True)
+    print('%s Updated clock' % datetime.datetime.now())
+except:
+    # This will fail if we don't have network connectivity
+    pass
 
 # Find old RFID reader processes and terminate them at lot
 for proc in psutil.process_iter():
@@ -88,8 +98,7 @@ for (icon_name, icon, font, inset) in [
         ('wifi_off', unichr(0xf5aa), icons, 0),
         ('connect_on', unichr(0xf1f5), icons, ICON_SIZE + 5),
         ('connect_off', unichr(0xf1f8), icons, ICON_SIZE),
-        ('in', 'in', text, (ICON_SIZE + 5) * 2),
-        ('out', 'out', text, (ICON_SIZE + 5) * 2)]:
+        ('location', config['location'], text, (ICON_SIZE + 5) * 2)]:
     img = Image.new('RGBA', (320, 240))
     img_writer = ImageDraw.Draw(img)
     width, height = img_writer.textsize(icon, font=font)
@@ -115,6 +124,25 @@ last_netcheck_time = 0
 
 try:
     while reader.poll() is None:
+        if connected:
+            event_id = queue.get_event('new')
+            if event_id:
+                data = queue.read_event('new', event_id)
+                data['timestamp-transferred'] = time.time()
+                try:
+                    r = requests.put('%s/event/%s' %(config['server'],
+                                                     event_id),
+                                     data={'data': json.dumps(data)})
+                    if r.status_code == 200:
+                        print('%s Wrote queued event %s'
+                              %(datetime.datetime.now(), event_id))
+                        queue.change_state('new', 'sent', event_id)
+                except Exception as e:
+                    # Failed to stream event to server
+                    print('%s Failed to stream queued event %s: %s'
+                          %(datetime.datetime.now(), event_id, e))
+                    connected = False
+
         if len(select.select([pipe_read], [], [], 0)[0]) == 1:
             scan = reader_flo.readline().rstrip('\n')
             print('%s RFID reader said: %s' %(datetime.datetime.now(), scan))
@@ -125,11 +153,46 @@ try:
                     last_scanned = data['owner']
                     last_scanned_time = time.time()
                     last_status_time = 0
+
+                    event_id = str(uuid.uuid4())
+                    data['event_id'] = event_id
+                    data['location'] = config['location']
+                    data['device'] = config['device-name']
+                    data['timestamp-device'] = time.time()
+
+                    h = hashlib.sha256()
+                    for key in data:
+                        h.update('%s:%s' %(key, data[key]))
+                    data['signature'] = h.hexdigest()
+
+                    queue.store_event('new', event_id, data)
+                    data['timestamp-transferred'] = time.time()
+
+                    try:
+                        r = requests.put('%s/event/%s' %(config['server'],
+                                                         event_id),
+                                         data={'data': json.dumps(data)})
+                        if r.status_code == 200:
+                            print('%s Wrote event %s'
+                                  %(datetime.datetime.now(), event_id))
+                            queue.change_state('new', 'sent', event_id)
+                        else:
+                            # Failed to write event to server
+                            print('%s Failed to store event %s with HTTP '
+                                  'status %s'
+                                   %(datetime.datetime.now(), event_id,
+                                     r.status_code))
+
+                    except Exception as e:
+                        # Failed to stream event to server
+                        print('%s Failed to stream event %s: %s'
+                              %(datetime.datetime.now(), event_id, e))
+
             except Exception as e:
                 print('%s Ignoring malformed data: %s'
                       %(datetime.datetime.now(), e))
 
-        elif time.time() - last_netcheck_time > 60:
+        elif time.time() - last_netcheck_time > 30:
             # Determine IP address
             ipaddress = '...'
             last_netcheck_time = time.time()
@@ -142,6 +205,19 @@ try:
                     ipaddress = m.group(1)
                     print('%s ipaddress is %s' %(datetime.datetime.now(),
                                                  ipaddress))
+
+            # Check for the server
+            try:
+                connected = False
+                r = requests.get('%s/health/%s' %(config['server'],
+                                                  config['device-name']))
+                print('%s Connectivity check HTTP status code: %s'
+                      %(datetime.datetime.now(), r.status_code))
+                if r.status_code == 200:
+                    connected = True
+            except Exception as e:
+                print('%s Connectivity check error: %s'
+                      %(datetime.datetime.now(), e))
 
         elif time.time() - last_status_time > 5:
             last_status_time = time.time()
@@ -159,7 +235,7 @@ try:
             else:
                 status = Image.alpha_composite(status, images['connect_off'])
 
-            status = Image.alpha_composite(status, images['out'])
+            status = Image.alpha_composite(status, images['location'])
 
             now = datetime.datetime.now()
             status_writer = ImageDraw.Draw(status)
@@ -171,10 +247,12 @@ try:
                                font=small_text)
 
             # Display queue size
-            width, height = status_writer.textsize('42 queued',
-                                                   font=small_text)
+            queued_string = '%d queued' % queue.count_events('new')
+            width, height = status_writer.textsize(
+                queued_string,
+                font=small_text)
             status_writer.text((320 - width - 5, 240 - (ICON_SIZE / 2) - 5),
-                               '42 queued',
+                               queued_string,
                                fill='black',
                                font=small_text)
 
@@ -200,8 +278,6 @@ try:
                     font=giant_text)
 
             TFT.display(status.rotate(90, resample=0, expand=1))
-            print('%s Updating the status screen took %.02f seconds'
-                  %(datetime.datetime.now(), time.time() - last_status_time))
 
     # The RFID reader process exitted?
     os.close(pipe_read)
