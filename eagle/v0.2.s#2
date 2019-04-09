@@ -910,7 +910,7 @@ W = angled&lt;p&gt;
 <label x="12.7" y="-2.54" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="SPI0_CS0" class="0">
+<net name="SPI0_CS" class="0">
 <segment>
 <pinref part="RPI" gate="-24" pin="KL"/>
 <wire x1="5.08" y1="35.56" x2="33.02" y2="35.56" width="0.1524" layer="91"/>
