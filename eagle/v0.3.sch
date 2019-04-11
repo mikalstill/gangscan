@@ -11072,9 +11072,6 @@ Source: www.kingbright.com</description>
 <pinref part="RFID" gate="1" pin="8"/>
 <wire x1="17.78" y1="76.2" x2="88.9" y2="76.2" width="0.1524" layer="91"/>
 <label x="17.78" y="76.2" size="1.778" layer="95"/>
-<pinref part="LIPO" gate="-12" pin="KL"/>
-<wire x1="-30.48" y1="66.04" x2="5.08" y2="66.04" width="0.1524" layer="91"/>
-<junction x="5.08" y="66.04"/>
 </segment>
 </net>
 <net name="5V" class="0">
@@ -11124,74 +11121,11 @@ Source: www.kingbright.com</description>
 <pinref part="LIPO" gate="-7" pin="KL"/>
 </segment>
 </net>
-<net name="N$14" class="0">
-<segment>
-<pinref part="LIPO" gate="-14" pin="KL"/>
-<pinref part="RPI" gate="-14" pin="KL"/>
-<wire x1="-30.48" y1="60.96" x2="5.08" y2="60.96" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$1" class="0">
-<segment>
-<pinref part="LIPO" gate="-3" pin="KL"/>
-<pinref part="RPI" gate="-3" pin="KL"/>
-<wire x1="-30.48" y1="88.9" x2="5.08" y2="88.9" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$2" class="0">
-<segment>
-<pinref part="RPI" gate="-4" pin="KL"/>
-<pinref part="LIPO" gate="-4" pin="KL"/>
-<wire x1="5.08" y1="86.36" x2="-30.48" y2="86.36" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$3" class="0">
-<segment>
-<pinref part="LIPO" gate="-5" pin="KL"/>
-<pinref part="RPI" gate="-5" pin="KL"/>
-<wire x1="-30.48" y1="83.82" x2="5.08" y2="83.82" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="N$4" class="0">
 <segment>
 <pinref part="RPI" gate="-6" pin="KL"/>
 <pinref part="LIPO" gate="-6" pin="KL"/>
 <wire x1="5.08" y1="81.28" x2="-30.48" y2="81.28" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$5" class="0">
-<segment>
-<pinref part="LIPO" gate="-8" pin="KL"/>
-<pinref part="RPI" gate="-8" pin="KL"/>
-<wire x1="-30.48" y1="76.2" x2="5.08" y2="76.2" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$6" class="0">
-<segment>
-<pinref part="RPI" gate="-9" pin="KL"/>
-<pinref part="LIPO" gate="-9" pin="KL"/>
-<wire x1="5.08" y1="73.66" x2="-30.48" y2="73.66" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$7" class="0">
-<segment>
-<pinref part="LIPO" gate="-10" pin="KL"/>
-<pinref part="RPI" gate="-10" pin="KL"/>
-<wire x1="-30.48" y1="71.12" x2="5.08" y2="71.12" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$8" class="0">
-<segment>
-<pinref part="RPI" gate="-11" pin="KL"/>
-<pinref part="LIPO" gate="-11" pin="KL"/>
-<wire x1="5.08" y1="68.58" x2="-30.48" y2="68.58" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$9" class="0">
-<segment>
-<pinref part="RPI" gate="-13" pin="KL"/>
-<pinref part="LIPO" gate="-13" pin="KL"/>
-<wire x1="5.08" y1="63.5" x2="-30.48" y2="63.5" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$10" class="0">

@@ -1855,14 +1855,14 @@ design rules under a new name.</description>
 <attribute name="OC_NEWARK" value="unknown" x="78" y="69" size="1.778" layer="27" rot="R270" display="off"/>
 <attribute name="VALUE" x="82.572" y="74.08" size="1.27" layer="27" rot="R270"/>
 </element>
-<element name="LED1" library="led" library_urn="urn:adsk.eagle:library:259" package="LED3MM" package3d_urn="urn:adsk.eagle:package:15797/1" value="" x="3" y="-13" smashed="yes">
-<attribute name="NAME" x="4.905" y="-12.619" size="1.27" layer="25" ratio="10"/>
-<attribute name="VALUE" x="4.905" y="-14.651" size="1.27" layer="27" ratio="10"/>
+<element name="LED1" library="led" library_urn="urn:adsk.eagle:library:259" package="LED3MM" package3d_urn="urn:adsk.eagle:package:15797/1" value="" x="5" y="80" smashed="yes">
+<attribute name="NAME" x="6.905" y="80.381" size="1.27" layer="25" ratio="10"/>
+<attribute name="VALUE" x="6.905" y="78.349" size="1.27" layer="27" ratio="10"/>
 </element>
-<element name="RLED" library="rcl" library_urn="urn:adsk.eagle:library:334" package="0204/5" package3d_urn="urn:adsk.eagle:package:23488/1" value="" x="4" y="-18" smashed="yes">
-<attribute name="NAME" x="1.9934" y="-16.8316" size="0.9906" layer="25" ratio="10"/>
-<attribute name="SPICEPREFIX" value="R" x="4" y="-18" size="1.778" layer="27" display="off"/>
-<attribute name="VALUE" x="1.8664" y="-20.3114" size="0.9906" layer="27" ratio="10"/>
+<element name="RLED" library="rcl" library_urn="urn:adsk.eagle:library:334" package="0204/5" package3d_urn="urn:adsk.eagle:package:23488/1" value="" x="4" y="73" smashed="yes" rot="R90">
+<attribute name="NAME" x="2.8316" y="70.9934" size="0.9906" layer="25" ratio="10" rot="R90"/>
+<attribute name="SPICEPREFIX" value="R" x="4" y="73" size="1.778" layer="27" rot="R90" display="off"/>
+<attribute name="VALUE" x="6.3114" y="70.8664" size="0.9906" layer="27" ratio="10" rot="R90"/>
 </element>
 </elements>
 <signals>
@@ -1911,7 +1911,7 @@ design rules under a new name.</description>
 <wire x1="21.38" y1="7.81" x2="13.73" y2="5" width="0" layer="19" extent="1-1"/>
 <wire x1="31.54" y1="7.81" x2="21.38" y2="7.81" width="0" layer="19" extent="1-1"/>
 <wire x1="33.73" y1="20.87" x2="31.54" y2="7.81" width="0" layer="19" extent="1-1"/>
-<wire x1="4.27" y1="-13" x2="13.73" y2="0" width="0" layer="19" extent="1-1"/>
+<wire x1="6.27" y1="80" x2="13.73" y2="0" width="0" layer="19" extent="1-1"/>
 </signal>
 <signal name="SPI0_CS0">
 <contactref element="RPI" pad="24"/>
@@ -2038,12 +2038,12 @@ design rules under a new name.</description>
 <signal name="N$10">
 <contactref element="MCP4922" pad="10"/>
 <contactref element="RLED" pad="1"/>
-<wire x1="1.46" y1="-18" x2="26.46" y2="7.81" width="0" layer="19" extent="1-1"/>
+<wire x1="4" y1="70.46" x2="26.46" y2="7.81" width="0" layer="19" extent="1-1"/>
 </signal>
 <signal name="N$11">
 <contactref element="RLED" pad="2"/>
 <contactref element="LED1" pad="A"/>
-<wire x1="1.73" y1="-13" x2="6.54" y2="-18" width="0" layer="19" extent="1-1"/>
+<wire x1="3.73" y1="80" x2="4" y2="75.54" width="0" layer="19" extent="1-1"/>
 </signal>
 </signals>
 <mfgpreviewcolors>
