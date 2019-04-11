@@ -21,6 +21,7 @@ margin = 13
 
 import numbers
 import time
+import numpy as np
 
 from PIL import Image
 from PIL import ImageDraw
@@ -250,9 +251,12 @@ class TFT24T():
             image = image.rotate(90)
 
         # Set address bounds to entire display.
+        start = time.time()
         self.set_frame()
+
         # Convert image to array of 16bit 565 RGB data bytes.
         pixelbytes = list(self.image_to_data(image))
+
         # Write data to hardware.
         self.data(pixelbytes)
 
@@ -320,15 +324,11 @@ class TFT24T():
 
     def image_to_data(self, image):
         """Generator function to convert a PIL image to 16-bit 565 RGB bytes."""
-        # Source of this code: Adafruit ILI9341 python project
-        pixels = image.convert('RGB').load()
-        width, height = image.size
-        for y in range(height):
-            for x in range(width):
-                r,g,b = pixels[(x,y)]
-                color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
-                yield (color >> 8) & 0xFF
-                yield color & 0xFF
+        #NumPy is much faster at doing this. NumPy code provided by:
+        #Keith (https://www.blogger.com/profile/02555547344016007163)
+        pb = np.array(image.convert('RGB')).astype('uint16')
+        color = ((pb[:,:,0] & 0xF8) << 8) | ((pb[:,:,1] & 0xFC) << 3) | (pb[:,:,2] >> 3)
+        return np.dstack(((color >> 8) & 0xFF, color & 0xFF)).flatten().tolist()
 
 
     def textdirect(self, pos, text, font, fill="white"):
