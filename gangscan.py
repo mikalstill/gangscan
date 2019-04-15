@@ -35,8 +35,8 @@ import filequeue
 from lib_tft24T import TFT24T
 import spidev
 
-# For LCD TFT GPIOs
-DC = 24
+# For LCD TFT GPIOs. Numbering is GPIO.
+DC = 26
 RST = 25
 LED = 23
 
