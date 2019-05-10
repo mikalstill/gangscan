@@ -10743,7 +10743,6 @@ Source: http://cache.national.com/ds/LM/LM386.pdf</description>
 <sheets>
 <sheet>
 <plain>
-<rectangle x1="116.84" y1="38.1" x2="134.62" y2="66.04" layer="97"/>
 </plain>
 <instances>
 <instance part="RPI" gate="-1" x="0" y="93.98" smashed="yes">
@@ -11146,12 +11145,11 @@ Source: http://cache.national.com/ds/LM/LM386.pdf</description>
 <junction x="129.54" y="45.72"/>
 </segment>
 </net>
-<net name="AUDIO" class="0">
+<net name="N$3" class="0">
 <segment>
 <pinref part="RPI" gate="-13" pin="KL"/>
 <pinref part="270OHM" gate="G$1" pin="2"/>
 <wire x1="5.08" y1="63.5" x2="129.54" y2="63.5" width="0.1524" layer="91"/>
-<label x="12.7" y="63.5" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$5" class="0">

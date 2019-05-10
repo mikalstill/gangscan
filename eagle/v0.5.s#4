@@ -10718,9 +10718,7 @@ Source: http://cache.national.com/ds/LM/LM386.pdf</description>
 <variantdefs>
 </variantdefs>
 <classes>
-<class number="0" name="default" width="0.4064" drill="0">
-</class>
-<class number="1" name="ground" width="0.6096" drill="0">
+<class number="0" name="default" width="0" drill="0">
 </class>
 </classes>
 <parts>
@@ -10743,7 +10741,6 @@ Source: http://cache.national.com/ds/LM/LM386.pdf</description>
 <sheets>
 <sheet>
 <plain>
-<rectangle x1="116.84" y1="38.1" x2="134.62" y2="66.04" layer="97"/>
 </plain>
 <instances>
 <instance part="RPI" gate="-1" x="0" y="93.98" smashed="yes">
@@ -11008,6 +11005,47 @@ Source: http://cache.national.com/ds/LM/LM386.pdf</description>
 <label x="12.7" y="38.1" size="1.778" layer="95"/>
 </segment>
 </net>
+<net name="GND" class="0">
+<segment>
+<pinref part="RPI" gate="-39" pin="KL"/>
+<wire x1="5.08" y1="-2.54" x2="81.28" y2="-2.54" width="0.1524" layer="91"/>
+<pinref part="RFID" gate="1" pin="3"/>
+<wire x1="81.28" y1="-2.54" x2="81.28" y2="50.8" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="50.8" x2="81.28" y2="88.9" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="88.9" x2="88.9" y2="88.9" width="0.1524" layer="91"/>
+<pinref part="LCD" gate="1" pin="2"/>
+<wire x1="81.28" y1="50.8" x2="88.9" y2="50.8" width="0.1524" layer="91"/>
+<junction x="81.28" y="50.8"/>
+<label x="12.7" y="-2.54" size="1.778" layer="95"/>
+<junction x="81.28" y="-2.54"/>
+<wire x1="81.28" y1="-2.54" x2="101.6" y2="-2.54" width="0.1524" layer="91"/>
+<pinref part="LED1" gate="G$1" pin="C"/>
+<junction x="101.6" y="-2.54"/>
+<wire x1="101.6" y1="-2.54" x2="119.38" y2="-2.54" width="0.1524" layer="91"/>
+<pinref part="33NF" gate="G$1" pin="1"/>
+<wire x1="121.92" y1="53.34" x2="119.38" y2="53.34" width="0.1524" layer="91"/>
+<pinref part="150OHM" gate="G$1" pin="1"/>
+<wire x1="119.38" y1="53.34" x2="119.38" y2="45.72" width="0.1524" layer="91"/>
+<wire x1="119.38" y1="45.72" x2="119.38" y2="30.48" width="0.1524" layer="91"/>
+<junction x="119.38" y="45.72"/>
+<junction x="119.38" y="-2.54"/>
+<pinref part="U$1" gate="G$1" pin="-"/>
+<wire x1="119.38" y1="30.48" x2="119.38" y2="-2.54" width="0.1524" layer="91"/>
+<wire x1="193.04" y1="27.94" x2="193.04" y2="-2.54" width="0.1524" layer="91"/>
+<wire x1="193.04" y1="-2.54" x2="180.34" y2="-2.54" width="0.1524" layer="91"/>
+<pinref part="IC1" gate="G$1" pin="-IN"/>
+<wire x1="180.34" y1="-2.54" x2="167.64" y2="-2.54" width="0.1524" layer="91"/>
+<wire x1="167.64" y1="-2.54" x2="119.38" y2="-2.54" width="0.1524" layer="91"/>
+<wire x1="162.56" y1="30.48" x2="119.38" y2="30.48" width="0.1524" layer="91"/>
+<junction x="119.38" y="30.48"/>
+<pinref part="IC1" gate="G$1" pin="GND"/>
+<wire x1="167.64" y1="25.4" x2="167.64" y2="-2.54" width="0.1524" layer="91"/>
+<junction x="167.64" y="-2.54"/>
+<pinref part="10OHM" gate="G$1" pin="1"/>
+<wire x1="180.34" y1="2.54" x2="180.34" y2="-2.54" width="0.1524" layer="91"/>
+<junction x="180.34" y="-2.54"/>
+</segment>
+</net>
 <net name="SPI0_CS0" class="0">
 <segment>
 <pinref part="RPI" gate="-24" pin="KL"/>
@@ -11121,6 +11159,13 @@ Source: http://cache.national.com/ds/LM/LM386.pdf</description>
 <pinref part="LIPO" gate="-7" pin="KL"/>
 </segment>
 </net>
+<net name="N$4" class="0">
+<segment>
+<pinref part="RPI" gate="-6" pin="KL"/>
+<pinref part="LIPO" gate="-6" pin="KL"/>
+<wire x1="5.08" y1="81.28" x2="-30.48" y2="81.28" width="0.1524" layer="91"/>
+</segment>
+</net>
 <net name="N$11" class="0">
 <segment>
 <pinref part="RLED" gate="G$1" pin="2"/>
@@ -11134,6 +11179,7 @@ Source: http://cache.national.com/ds/LM/LM386.pdf</description>
 <pinref part="33NF" gate="G$1" pin="2"/>
 <pinref part="10UF" gate="G$1" pin="2"/>
 <junction x="129.54" y="53.34"/>
+<pinref part="10UF" gate="G$1" pin="2"/>
 </segment>
 </net>
 <net name="N$2" class="0">
@@ -11146,12 +11192,11 @@ Source: http://cache.national.com/ds/LM/LM386.pdf</description>
 <junction x="129.54" y="45.72"/>
 </segment>
 </net>
-<net name="AUDIO" class="0">
+<net name="N$3" class="0">
 <segment>
 <pinref part="RPI" gate="-13" pin="KL"/>
 <pinref part="270OHM" gate="G$1" pin="2"/>
 <wire x1="5.08" y1="63.5" x2="129.54" y2="63.5" width="0.1524" layer="91"/>
-<label x="12.7" y="63.5" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$5" class="0">
@@ -11185,55 +11230,6 @@ Source: http://cache.national.com/ds/LM/LM386.pdf</description>
 <pinref part="0.1UF" gate="G$1" pin="1"/>
 <pinref part="10OHM" gate="G$1" pin="2"/>
 <wire x1="180.34" y1="15.24" x2="180.34" y2="12.7" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="GND" class="1">
-<segment>
-<pinref part="RPI" gate="-6" pin="KL"/>
-<pinref part="LIPO" gate="-6" pin="KL"/>
-<wire x1="5.08" y1="81.28" x2="-17.78" y2="81.28" width="0.1524" layer="91"/>
-<pinref part="RPI" gate="-39" pin="KL"/>
-<wire x1="-17.78" y1="81.28" x2="-30.48" y2="81.28" width="0.1524" layer="91"/>
-<wire x1="5.08" y1="-2.54" x2="81.28" y2="-2.54" width="0.1524" layer="91"/>
-<pinref part="RFID" gate="1" pin="3"/>
-<wire x1="81.28" y1="-2.54" x2="81.28" y2="50.8" width="0.1524" layer="91"/>
-<wire x1="81.28" y1="50.8" x2="81.28" y2="88.9" width="0.1524" layer="91"/>
-<wire x1="81.28" y1="88.9" x2="88.9" y2="88.9" width="0.1524" layer="91"/>
-<pinref part="LCD" gate="1" pin="2"/>
-<wire x1="81.28" y1="50.8" x2="88.9" y2="50.8" width="0.1524" layer="91"/>
-<junction x="81.28" y="50.8"/>
-<label x="12.7" y="-2.54" size="1.778" layer="95"/>
-<junction x="81.28" y="-2.54"/>
-<wire x1="81.28" y1="-2.54" x2="101.6" y2="-2.54" width="0.1524" layer="91"/>
-<pinref part="LED1" gate="G$1" pin="C"/>
-<junction x="101.6" y="-2.54"/>
-<wire x1="101.6" y1="-2.54" x2="119.38" y2="-2.54" width="0.1524" layer="91"/>
-<pinref part="33NF" gate="G$1" pin="1"/>
-<wire x1="121.92" y1="53.34" x2="119.38" y2="53.34" width="0.1524" layer="91"/>
-<pinref part="150OHM" gate="G$1" pin="1"/>
-<wire x1="119.38" y1="53.34" x2="119.38" y2="45.72" width="0.1524" layer="91"/>
-<wire x1="119.38" y1="45.72" x2="119.38" y2="30.48" width="0.1524" layer="91"/>
-<junction x="119.38" y="45.72"/>
-<junction x="119.38" y="-2.54"/>
-<pinref part="U$1" gate="G$1" pin="-"/>
-<wire x1="119.38" y1="30.48" x2="119.38" y2="-2.54" width="0.1524" layer="91"/>
-<wire x1="193.04" y1="27.94" x2="193.04" y2="-2.54" width="0.1524" layer="91"/>
-<wire x1="193.04" y1="-2.54" x2="180.34" y2="-2.54" width="0.1524" layer="91"/>
-<pinref part="IC1" gate="G$1" pin="-IN"/>
-<wire x1="180.34" y1="-2.54" x2="167.64" y2="-2.54" width="0.1524" layer="91"/>
-<wire x1="167.64" y1="-2.54" x2="119.38" y2="-2.54" width="0.1524" layer="91"/>
-<wire x1="162.56" y1="30.48" x2="119.38" y2="30.48" width="0.1524" layer="91"/>
-<junction x="119.38" y="30.48"/>
-<pinref part="IC1" gate="G$1" pin="GND"/>
-<wire x1="167.64" y1="25.4" x2="167.64" y2="-2.54" width="0.1524" layer="91"/>
-<junction x="167.64" y="-2.54"/>
-<pinref part="10OHM" gate="G$1" pin="1"/>
-<wire x1="180.34" y1="2.54" x2="180.34" y2="-2.54" width="0.1524" layer="91"/>
-<junction x="180.34" y="-2.54"/>
-<wire x1="-17.78" y1="81.28" x2="-17.78" y2="-2.54" width="0.1524" layer="91"/>
-<wire x1="-17.78" y1="-2.54" x2="5.08" y2="-2.54" width="0.1524" layer="91"/>
-<junction x="-17.78" y="81.28"/>
-<junction x="5.08" y="-2.54"/>
 </segment>
 </net>
 </nets>

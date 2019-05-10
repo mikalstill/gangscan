@@ -10743,7 +10743,6 @@ Source: http://cache.national.com/ds/LM/LM386.pdf</description>
 <sheets>
 <sheet>
 <plain>
-<rectangle x1="116.84" y1="38.1" x2="134.62" y2="66.04" layer="97"/>
 </plain>
 <instances>
 <instance part="RPI" gate="-1" x="0" y="93.98" smashed="yes">
