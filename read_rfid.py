@@ -8,7 +8,7 @@ import time
 import RPi.GPIO as GPIO
 from mfrc522 import SimpleMFRC522
 
-reader = SimpleMFRC522(bus=1, device=0, nrstpd=36)
+reader = SimpleMFRC522(bus=0, device=1, nrstpd=36)
 
 with open('config.json') as f:
     config = json.loads(f.read())

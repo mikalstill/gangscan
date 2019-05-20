@@ -55,11 +55,9 @@ dtparam=spi=on
 # Enable audio (loads snd_bcm2835)
 dtparam=audio=on
 
-# Enable second SPI bus
-dtoverlay=spi1-3cs
-
-# Enable PWM for audio, mono on pin 13
-#dtoverlay=pwm,pin=13,func=2
+################################################################################
+# GangScan customizations below here.
+################################################################################
 
 # Enable PWM for audio, stereo on pins 18 and 13
-#dtoverlay=pwm-2chan,pin=18,func=2,pin2=13,func2=4
+dtoverlay=pwm-2chan,pin=18,func=2,pin2=13,func2=4
