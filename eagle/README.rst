@@ -6,4 +6,5 @@ Board notes:
   audio support. Unfortunately, SPI1 conflicts with the audio hardware and the RFID reader
   needs to be moved onto SPI0 for this to work correctly.
 * v0.7: tweaked footprint labels to be more accurate. Moved RFID reader onto SPIO bus to free
-  up pins for audio.
+  up pins for audio. Corrected MKT capacitor pitch to 5mm.
+* v0.8: (errata): correct resistor pitch.
