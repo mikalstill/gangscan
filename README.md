@@ -34,19 +34,19 @@ the next steps.
 * Log in: username is "pi" and password is "raspberry".
 * Change the password: "passwd".
 * Configure the pi:
-** sudo raspi-config
-** Join wifi (network options)
-** Enable ssh (interfacing options)
-** Expand filesystem (advanced options)
-** Reboot
+  * sudo raspi-config
+  * Join wifi (network options)
+  * Enable ssh (interfacing options)
+  * Expand filesystem (advanced options)
+  * Reboot
 * Update the operating system:
-** sudo apt-get update
-** sudo apt-get dist-upgrade
+  * sudo apt-get update
+  * sudo apt-get dist-upgrade
 * Install ansible:
-** sudo apt-get install ansible
+  * sudo apt-get install ansible
 * Install git and clone gangscan:
-** sudo apt-get install git
-** git clone https://github.com/mikalstill/gangscan
+  * sudo apt-get install git
+  * git clone https://github.com/mikalstill/gangscan
 
 Installation: Gang Server
 =========================
