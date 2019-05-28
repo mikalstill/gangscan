@@ -2,11 +2,14 @@
 
 import datetime
 import json
+import mimetypes
+import os
 import time
 
 from flask import Flask
 from flask import Response
 from flask import request
+from flask import send_file
 from flask_restful import Api
 from flask_restful import Resource
 
@@ -24,6 +27,7 @@ with open('config.json') as f:
     config = json.loads(f.read())
 
 queue = filequeue.FileQueue('gangscan-%s' % config['device-name'])
+mimetypes.init()
 
 
 class Root(Resource):
@@ -73,6 +77,20 @@ class Root(Resource):
         return resp
 
 
+class Local(Resource):
+    def get(self, path):
+        filepath = os.path.join('gangserver', path.replace('..', ''))
+        if not os.path.exists(filepath):
+            resp.status_code = 404
+            return resp
+
+        mime = mimetypes.MimeTypes().guess_type(path)[0]
+        return send_file(
+            filepath,
+            mimetype=mime,
+            attachment_filename=path)
+
+
 class Health(Resource):
     def get(self, device):
         print('%s Health check from %s' %(datetime.datetime.now(), device))
@@ -115,6 +133,7 @@ class Event(Resource):
 
 
 api.add_resource(Root, '/')
+api.add_resource(Local, '/local/<string:path>')
 api.add_resource(Health, '/health/<string:device>')
 api.add_resource(Event, '/event/<string:event_id>')
 
