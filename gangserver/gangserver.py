@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import datetime
 import json
@@ -6,6 +6,7 @@ import mimetypes
 import os
 import time
 
+from flask import abort
 from flask import Flask
 from flask import Response
 from flask import request
@@ -33,7 +34,7 @@ mimetypes.init()
 class Root(Resource):
     def get(self):
         # Read template and data
-        with open('report.html.tmpl') as f:
+        with open('gangserver/report.html.tmpl') as f:
             t = Template(f.read())
         with open('groupings.json') as f:
             groupings = json.loads(f.read())
@@ -79,16 +80,14 @@ class Root(Resource):
 
 class Local(Resource):
     def get(self, path):
-        filepath = os.path.join('gangserver', path.replace('..', ''))
+        filepath = os.path.join('gangserver/local', path.replace('..', ''))
         if not os.path.exists(filepath):
-            resp.status_code = 404
-            return resp
+            abort(404)
 
-        mime = mimetypes.MimeTypes().guess_type(path)[0]
+        mime = mimetypes.MimeTypes().guess_type(filepath)[0]
         return send_file(
-            filepath,
-            mimetype=mime,
-            attachment_filename=path)
+            os.path.join('local', path),
+            mimetype=mime)
 
 
 class Health(Resource):

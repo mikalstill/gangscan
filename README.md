@@ -34,19 +34,19 @@ the next steps.
 * Log in: username is "pi" and password is "raspberry".
 * Change the password: "passwd".
 * Configure the pi:
-  * sudo raspi-config
+  * `sudo raspi-config`
   * Join wifi (network options)
   * Enable ssh (interfacing options)
   * Expand filesystem (advanced options)
   * Reboot
 * Update the operating system:
-  * sudo apt-get update
-  * sudo apt-get dist-upgrade
+  * `sudo apt-get update`
+  * `sudo apt-get dist-upgrade`
 * Install ansible:
-  * sudo apt-get install ansible
+  * `sudo apt-get install ansible`
 * Install git and clone gangscan:
-  * sudo apt-get install git
-  * git clone https://github.com/mikalstill/gangscan
+  * `sudo apt-get install git`
+  * `git clone https://github.com/mikalstill/gangscan`
 
 Installation: Gang Server
 =========================
@@ -58,8 +58,41 @@ deployment. First follow the common installation steps above, once those
 steps are done we have enough of a system to be able to do the rest of the
 install via ansible plays.
 
+Run ansible to install gangserver:
 
+~~~~
+$ ansible-playbook -i hosts deploy/gangserver.yml
+~~~~
 
+This should install all the required software for the gangserver, and start
+it on port 80. The server advertises itself on the network using avahi /
+zeroconf networking, so you don't need to have the server running on a
+machine with a known IP. You can verify that it is being advertized correctly
+by browsing all the zeroconf adverts for your network:
+
+~~~~
+$ avahi-browse --all | grep gangserver
++  wlan0 IPv6 gangserver                                    _gangserver._tcp     local
++  wlan0 IPv4 gangserver                                    _gangserver._tcp     local
+(hit ctrl-c to exit)
+~~~~
+
+Checking the status of Gang Scan
+================================
+
+Because Gang Scan uses systemd, you can check the status of the various
+components using systemd commands. To see the general status of the server,
+do this:
+
+~~~~
+$ sudo systemctl status gangserver
+~~~~
+
+To see recent log messages from the server, do this:
+
+~~~~
+$ sudo journalctl -u gangserver
+~~~~
 
 Credits
 =======

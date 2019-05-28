@@ -1,0 +1,24 @@
+[Unit]
+Description=The Gang Show attendance server
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=pi
+
+Environment=FLASK_APP=/home/pi/gangscan/gangserver/gangserver.py
+Environment=PYTHONPATH=/home/pi/gangscan/
+
+WorkingDirectory=/home/pi/gangscan/
+
+ExecStart=/bin/sh -c '/usr/local/bin/flask run --host=0.0.0.0 --port=80'
+
+# Give a reasonable amount of time for the server to start up/shut down
+TimeoutSec=300
+Restart=on-failure
+RestartSec=150
+
+[Install]
+WantedBy=multi-user.target

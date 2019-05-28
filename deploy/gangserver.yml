@@ -1,0 +1,78 @@
+--- # Install gangserver on localhost
+- hosts: localhost
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  connection: local
+
+  tasks:
+  - include: includes/python_modern_pip.yml
+
+  # Set the timezone to Canberra
+  - name: set the timezone to Canberra
+    copy:
+      src: files/timezone
+      dest: /etc/timezone
+      owner: root
+      group: root
+      mode: '0444'
+
+  - name: install ntp
+    apt:
+      name: ntpdate
+      state: latest
+
+  - name: update time
+    command: ntpdate -s time.nist.gov
+
+  # Python dependancies
+  - name: install python zeroconf library
+    command: pip3 install -U zeroconf
+
+  - name: install python flask library
+    command: pip3 install -U flask
+
+  - name: install python flask-restful library
+    command: pip3 install -U flask-restful
+
+  # We use avahi to advertise where the server is running on the network
+  - name: install avahi-daemon
+    apt:
+      name: avahi-daemon
+      state: latest
+
+  - name: install avahi-utils
+    apt:
+      name: avahi-utils
+      state: latest
+
+  - name: copy avahi service configuration
+    copy:
+      src: files/gangserver.avahi.service
+      dest: /etc/avahi/services/gangscan.service
+      owner: root
+      group: root
+      mode: '0444'
+
+  - name: restart avahi
+    service:
+      name: avahi-daemon
+      state: reloaded
+
+  # Install the server itself. We run the server from the git checkout
+  # location.
+  - name: copy gangserver systemd configuration
+    copy:
+      src: files/gangserver.systemd.service
+      dest: /etc/systemd/system/gangserver.service
+      owner: root
+      group: root
+      mode: '0444'
+
+  - name: reload systemd itself
+    command: systemctl daemon-reload
+
+  - name: restart gangserver
+    service:
+      name: gangserver
+      state: restarted

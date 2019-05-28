@@ -1,0 +1,24 @@
+# Use a modern pip for python3
+  - name: install python-setuptools
+    apt:
+      name: python3-setuptools
+      state: latest
+
+  - name: test if we have any pip
+    shell: pip3 help
+    ignore_errors: True
+    register: has_pip
+
+  - name: install python3-pip
+    apt:
+      name: python3-pip
+      state: latest
+    when: has_pip is failed
+
+  - name: pip3 self-upgrade
+    command: pip3 install -U pip
+
+  - name: remove python3-pip
+    apt:
+      name: python3-pip
+      state: absent
