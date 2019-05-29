@@ -4,12 +4,13 @@
 [submodule "vendor/ili9341_SPI_Touchscreen_LCD_Raspberry-Pi"]
 	path = vendor/ili9341_SPI_Touchscreen_LCD_Raspberry-Pi
 	url = https://github.com/BehindTheSciences/ili9341_SPI_Touchscreen_LCD_Raspberry-Pi
-[submodule "vendor/MFRC522-python"]
-	path = vendor/MFRC522-python
-	url = https://github.com/pimylifeup/MFRC522-python
 [submodule "vendor/py-spidev"]
 	path = vendor/py-spidev
 	url = https://github.com/doceme/py-spidev.git
 [submodule "vendor/Python-RPi-MCP4922"]
 	path = vendor/Python-RPi-MCP4922
 	url = http://github.com/mrwunderbar666/Python-RPi-MCP4922
+[submodule "vendor/MFRC522-python"]
+	path = vendor/MFRC522-python
+	url = https://github.com/mikalstill/MFRC522-python
+	branch = master

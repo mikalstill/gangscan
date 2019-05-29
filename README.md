@@ -43,10 +43,13 @@ the next steps.
   * `sudo apt-get update`
   * `sudo apt-get dist-upgrade`
 * Install ansible:
-  * `sudo apt-get install ansible`
+  * `sudo apt-get install python3-pip`
+  * `sudo pip3 install ansible`
 * Install git and clone gangscan:
   * `sudo apt-get install git`
   * `git clone https://github.com/mikalstill/gangscan`
+  * `cd gangscan`
+  * `git submodule update --init --recursive`
 
 Installation: Gang Server
 =========================
@@ -61,7 +64,7 @@ install via ansible plays.
 Run ansible to install gangserver:
 
 ~~~~
-$ ansible-playbook -i hosts deploy/gangserver.yml
+$ /usr/local/bin/ansible-playbook -i hosts deploy/gangserver.yml
 ~~~~
 
 This should install all the required software for the gangserver, and start
@@ -72,9 +75,28 @@ by browsing all the zeroconf adverts for your network:
 
 ~~~~
 $ avahi-browse --all | grep gangserver
-+  wlan0 IPv6 gangserver                                    _gangserver._tcp     local
-+  wlan0 IPv4 gangserver                                    _gangserver._tcp     local
++  wlan0 IPv6 gangserver                                    _http._tcp     local
++  wlan0 IPv4 gangserver                                    _http._tcp     local
 (hit ctrl-c to exit)
+~~~~
+
+Installation: Gang Scan
+=======================
+
+The RFID reader hardware runs a program called gangscan. To install it,
+follow the common installation steps above, and then install gangscan with
+ansible:
+
+~~~~
+$ /usr/local/bin/ansible-playbook -i hosts deploy/gangscan.yml
+~~~~
+
+Because the ansible changes the boot configuraiton of the raspberry pi (it
+turns on SPI and PWN audio), you need to reboot before the scanner will work
+correctly:
+
+~~~~
+$ sudo reboot
 ~~~~
 
 Checking the status of Gang Scan

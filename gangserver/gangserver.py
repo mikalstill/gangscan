@@ -24,7 +24,7 @@ api = Api(app)
 
 
 # Read config and data
-with open('config.json') as f:
+with open('gangserver/config.json') as f:
     config = json.loads(f.read())
 
 queue = filequeue.FileQueue('gangscan-%s' % config['device-name'])
@@ -36,9 +36,9 @@ class Root(Resource):
         # Read template and data
         with open('gangserver/report.html.tmpl') as f:
             t = Template(f.read())
-        with open('groupings.json') as f:
+        with open('gangserver/groupings.json') as f:
             groupings = json.loads(f.read())
-        with open('status.json') as f:
+        with open('gangserver/status.json') as f:
             status = json.loads(f.read())
 
         # Rearrange the data
@@ -119,10 +119,10 @@ class Event(Resource):
         #     "timestamp-server": 1553634528.421658, 
         #     "timestamp-transferred": 1553634527.924872
         # }
-        with open('status.json') as f:
+        with open('gangserver/status.json') as f:
             status = json.loads(f.read())
         status[data['owner']] = data['location']
-        with open('status.json', 'w') as f:
+        with open('gangserver/status.json', 'w') as f:
             f.write(json.dumps(status, indent=4, sort_keys=True))
 
         print('%s Stored event %s: %s'

@@ -26,9 +26,6 @@
     command: ntpdate -s time.nist.gov
 
   # Python dependancies
-  - name: install python zeroconf library
-    command: pip3 install -U zeroconf
-
   - name: install python flask library
     command: pip3 install -U flask
 

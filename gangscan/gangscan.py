@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-# tft24T modified by BehindTheSciences.com
-# Credits to  Brian Lavery
+# This code is derived from the work of BehindTheSciences.com and Brian Lavery
 
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -11,8 +10,6 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so.
 
-# A demo of LCD/TFT SCREEN DISPLAY
-
 import datetime
 import hashlib
 import json
@@ -21,6 +18,7 @@ import psutil
 import re
 import requests
 import select
+import socket
 import subprocess
 import time
 import uuid
@@ -35,6 +33,8 @@ import filequeue
 from lib_tft24T import TFT24T
 import spidev
 
+import zeroconf
+
 # For LCD TFT GPIOs. Numbering is GPIO.
 DC = 26
 RST = 25
@@ -45,11 +45,6 @@ ICON_SIZE = 30
 INET_RE = re.compile(' +inet ([^ ]+) .*')
 
 print('%s Started' % datetime.datetime.now())
-
-# Read config
-with open('config.json') as f:
-    config = json.loads(f.read())
-queue = filequeue.FileQueue('gangscan-%s' % config['device-name'])
 
 # Setup GPIO
 GPIO.setmode(GPIO.BCM)
@@ -82,22 +77,36 @@ for proc in psutil.process_iter():
             print('%s Killing stale process' % datetime.datetime.now())
             os.kill(pinfo['pid'], 9)
 
+# Find server
+zc = zeroconf.Zeroconf()
+si = zc.get_service_info('_http._tcp.local.', 'gangserver._http._tcp.local.')
+server_address = socket.inet_ntoa(si.address)
+server_port = int(si.port)
+print('%s Found server at %s:%d' %(datetime.datetime.now(), server_address,
+                                   server_port))
+            
+# Read config from server
+with open('gangserver/config.json') as f:
+    config = json.loads(f.read())
+queue = filequeue.FileQueue('gangscan-%s' % config['device-name'])
+
 # Objects we need to draw things
-icons = ImageFont.truetype('materialdesignicons-webfont.ttf', ICON_SIZE)
-text = ImageFont.truetype('BebasNeue.ttf', ICON_SIZE)
-small_text = ImageFont.truetype('BebasNeue.ttf', ICON_SIZE / 2)
-giant_text = ImageFont.truetype('BebasNeue.ttf', int(ICON_SIZE * 1.3))
+icons = ImageFont.truetype('gangscan/materialdesignicons-webfont.ttf',
+                           ICON_SIZE)
+text = ImageFont.truetype('gangscan/BebasNeue.ttf', ICON_SIZE)
+small_text = ImageFont.truetype('gangscan/BebasNeue.ttf', int(ICON_SIZE / 2))
+giant_text = ImageFont.truetype('gangscan/BebasNeue.ttf', int(ICON_SIZE * 1.3))
 
 images = {}
-images['logo'] = Image.open('gangscan.jpeg').convert('RGBA')
+images['logo'] = Image.open('gangscan/gangscan.jpeg').convert('RGBA')
 images['logo'] = images['logo'].resize((320, 240))
 print('%s Loaded logo' % datetime.datetime.now())
 
 for (icon_name, icon, font, inset) in [
-        ('wifi_on', unichr(0xf5a9), icons, 0),
-        ('wifi_off', unichr(0xf5aa), icons, 0),
-        ('connect_on', unichr(0xf1f5), icons, ICON_SIZE + 5),
-        ('connect_off', unichr(0xf1f8), icons, ICON_SIZE),
+        ('wifi_on', chr(0xf5a9), icons, 0),
+        ('wifi_off', chr(0xf5aa), icons, 0),
+        ('connect_on', chr(0xf1f5), icons, ICON_SIZE + 5),
+        ('connect_off', chr(0xf1f8), icons, ICON_SIZE),
         ('location', config['location'], text, (ICON_SIZE + 5) * 2)]:
     img = Image.new('RGBA', (320, 240))
     img_writer = ImageDraw.Draw(img)
@@ -111,8 +120,8 @@ for (icon_name, icon, font, inset) in [
 # Start the RFID reader process
 (pipe_read, pipe_write) = os.pipe()
 reader_flo = os.fdopen(pipe_read)
-reader = subprocess.Popen('/usr/bin/python read_rfid.py', shell=True,
-                          stdout=pipe_write, stderr=pipe_write)
+reader = subprocess.Popen('/usr/bin/python3 gangscan/read_rfid.py',
+                          shell=True, stdout=pipe_write, stderr=pipe_write)
 
 last_scanned = None
 last_scanned_time = 0
@@ -199,7 +208,7 @@ try:
 
             ifconfig = subprocess.check_output('/sbin/ifconfig wlan0',
                                                shell=True)
-            for line in ifconfig.split('\n'):
+            for line in str(ifconfig).split('\n'):
                 m = INET_RE.match(line)
                 if m:
                     ipaddress = m.group(1)

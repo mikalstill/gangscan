@@ -1,0 +1,115 @@
+--- # Install gangscan on localhost
+- hosts: localhost
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  connection: local
+
+  tasks:
+  - include: includes/python_modern_pip.yml
+
+  # Set the timezone to Canberra
+  - name: set the timezone to Canberra
+    copy:
+      src: files/timezone
+      dest: /etc/timezone
+      owner: root
+      group: root
+      mode: '0444'
+
+  - name: install ntp
+    apt:
+      name: ntpdate
+      state: latest
+
+  - name: update time
+    command: ntpdate -s time.nist.gov
+
+  # Generic python dependancies
+  - name: install python zeroconf library
+    command: pip3 install -U zeroconf
+
+  # SPI LCD library dependancies (the library itself isn't used)
+  - name: install build-essential
+    apt:
+      name: build-essential
+      state: latest
+
+  - name: install python3-dev
+    apt:
+      name: python3-dev
+      state: latest
+
+  - name: install python3-smbus
+    apt:
+      name: python3-smbus
+      state: latest
+
+  - name: install python3-pil
+    apt:
+      name: python3-pil
+      state: latest
+
+  - name: install python3-numpy
+    apt:
+      name: python3-numpy
+      state: latest
+
+  - name: install python raspberry pi GPIO library
+    command: pip3 install -U RPi.GPIO
+
+  # MFRC522 RFID reader library
+  - name: install MFRC522 RFID library
+    command: python3 setup.py install
+    args:
+      chdir: ../vendor/MFRC522-python
+
+  # spidev
+  - name: install spidev library
+    command: python3 setup.py install
+    args:
+      chdir: ../vendor/py-spidev
+
+  # gangscan dependancies from pip
+  - name: install psutil
+    command: pip3 install psutil
+
+  - name: install requests
+    command: pip3 install requests
+
+  # We need to turn SPI on
+  - name: turn on SPI
+    replace:
+      dest: /boot/config.txt
+      regexp: '#*dtparam=spi=.*'
+      replace: 'dtparam=spi=on'
+      backup: no
+
+  # Turn on PWN audio (for raspberry pi zero w)
+  - name: enable PWM audio
+    blockinfile:
+      dest: /boot/config.txt
+      marker: "# -- {mark} ANSIBLE MANAGED BLOCK --"
+      block: |
+        # Enable PWM for audio, stereo on pins 18 and 13
+        dtoverlay=pwm-2chan,pin=18,func=2,pin2=13,func2=4
+      backup: no
+
+
+  # Install the scanner itself. We run the scanner from the git checkout
+  # location.
+  - name: copy gangscan systemd configuration
+    copy:
+      src: files/gangscan.systemd.service
+      dest: /etc/systemd/system/gangscan.service
+      owner: root
+      group: root
+      mode: '0444'
+
+  - name: reload systemd itself
+    command: systemctl daemon-reload
+
+  - name: restart gangscan
+    service:
+      name: gangscan
+      state: restarted
