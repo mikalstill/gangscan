@@ -37,9 +37,12 @@ def lookup_server():
     zc = zeroconf.Zeroconf()
     si = zc.get_service_info('_http._tcp.local.',
                              'gangserver._http._tcp.local.')
-    server_address = socket.inet_ntoa(si.address)
-    server_port = int(si.port)
-    log('Found server at %s:%d' %(server_address, server_port))
+    if si.address:
+        server_address = socket.inet_ntoa(si.address)
+        server_port = int(si.port)
+        log('Found server at %s:%d' %(server_address, server_port))
+    else:
+        log('Server not found')
 
     return server_address, server_port
 

@@ -83,16 +83,15 @@ server_address, server_port = util.lookup_server()
 
 # Read config from server, if required
 config_path = os.path.expanduser('~/.gangscan.json')
-connected, configuration_data = util.heartbeat_server(server_address,
-                                                      server_port,
-                                                      macaddress)
-if not connected and not os.path.exists(config_path):
-    util.log('Could not contact server for first run! Aborting.')
-    sys.exit(1)
+configuration_data = None
+if server_address:
+    connected, configuration_data = util.heartbeat_server(server_address,
+                                                          server_port,
+                                                          macaddress)
 
-if connected and configuration_data:
-    with open(config_path, 'w') as f:
-        f.write(json.dumps(configuration_data, indent=4, sort_keys=True))
+    if connected and configuration_data:
+        with open(config_path, 'w') as f:
+            f.write(json.dumps(configuration_data, indent=4, sort_keys=True))
 
 with open(config_path) as f:
     config = json.loads(f.read())
