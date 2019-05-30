@@ -17,17 +17,20 @@ from flask_restful import Resource
 from jinja2 import Template
 
 import filequeue
+import util
 
 
 app = Flask(__name__)
 api = Api(app)
 
 
+ipaddress, macaddress = util.ifconfig()
+
 # Read config and data
 with open('gangserver/config.json') as f:
     config = json.loads(f.read())
 
-queue = filequeue.FileQueue('gangscan-%s' % config['device-name'])
+queue = filequeue.FileQueue('gangserver-%s' % macaddress)
 mimetypes.init()
 
 
@@ -92,17 +95,18 @@ class Local(Resource):
 
 class Health(Resource):
     def get(self, device):
-        print('%s Health check from %s' %(datetime.datetime.now(), device))
-        return {'device-name': device,
-                'location': 'demo',
-                'pre-shared-key': config['pre-shared-key'],
-                'name-linger': config['name-linger']}
+        util.log('Health check from %s' % device)
+        returned_config = {'device-name': device,
+                           'location': config['devices'].get(device, '???'),
+                           'pre-shared-key': config['pre-shared-key'],
+                           'name-linger': config['name-linger']}
+        util.log('Returning config: %s' % returned_config)
+        return returned_config
 
 
 class Event(Resource):
     def __init__(self):
-        self.queue = filequeue.FileQueue('gangserver-%s'
-                                         % config['device-name'])
+        self.queue = filequeue.FileQueue('gangserver-%s' % macaddress)
 
     def put(self, event_id):
         data = json.loads(request.form['data'])
@@ -128,8 +132,7 @@ class Event(Resource):
         with open('gangserver/status.json', 'w') as f:
             f.write(json.dumps(status, indent=4, sort_keys=True))
 
-        print('%s Stored event %s: %s'
-              %(datetime.datetime.now(), event_id, data))
+        util.log('Stored event %s: %s' %(event_id, data))
         self.queue.store_event('received', event_id, data)
         return {event_id: data}
 

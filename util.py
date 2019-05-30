@@ -6,6 +6,7 @@ import re
 import requests
 import socket
 import subprocess
+import sys
 import zeroconf
 
 
@@ -18,18 +19,16 @@ def ifconfig():
     macaddress = '...'
 
     ifconfig = subprocess.check_output('/sbin/ifconfig wlan0', shell=True)
-    for line in str(ifconfig).split('\n'):
+    for line in ifconfig.decode('utf-8').split('\n'):
         m = INET_RE.match(line)
         if m:
             ipaddress = m.group(1)
-            print('%s ipaddress is %s' %(datetime.datetime.now(),
-                                         ipaddress))
+            log('ipaddress is %s' % ipaddress)
 
         m = ETHER_RE.match(line)
         if m:
             macaddress = m.group(1)
-            print('%s macaddress is %s' %(datetime.datetime.now(),
-                                          macaddress))
+            log('macaddress is %s' % macaddress)
 
     return ipaddress, macaddress
 
@@ -40,9 +39,7 @@ def lookup_server():
                              'gangserver._http._tcp.local.')
     server_address = socket.inet_ntoa(si.address)
     server_port = int(si.port)
-    print('%s Found server at %s:%d' %(datetime.datetime.now(),
-                                       server_address,
-                                       server_port))
+    log('Found server at %s:%d' %(server_address, server_port))
 
     return server_address, server_port
 
@@ -54,16 +51,18 @@ def heartbeat_server(address, port, deviceid):
     try:
         check_url = 'http://%s:%d/health/%s' %(address, port, deviceid)
         r = requests.get(check_url)
-        print('%s Connectivity check URL: %s'
-              %(datetime.datetime.now(), check_url))
-        print('%s Connectivity check HTTP status code: %s'
-              %(datetime.datetime.now(), r.status_code))
+        log('Connectivity check URL: %s' % check_url)
+        log('Connectivity check HTTP status code: %s' % r.status_code)
         if r.status_code == 200:
             connected = True
             config = json.loads(r.text)
 
     except Exception as e:
-        print('%s Connectivity check error: %s'
-              %(datetime.datetime.now(), e))
+        log('Connectivity check error: %s' % e)
 
     return connected, config
+
+
+def log(s):
+    sys.stderr.write('%s\n' % s)
+    sys.stderr.flush()
