@@ -93,7 +93,10 @@ class Local(Resource):
 class Health(Resource):
     def get(self, device):
         print('%s Health check from %s' %(datetime.datetime.now(), device))
-        return 'OK'
+        return {'device-name': device,
+                'location': 'demo',
+                'pre-shared-key': config['pre-shared-key'],
+                'name-linger': config['name-linger']}
 
 
 class Event(Resource):

@@ -15,11 +15,11 @@ import hashlib
 import json
 import os
 import psutil
-import re
 import requests
 import select
-import socket
+import spidev
 import subprocess
+import sys
 import time
 import uuid
 
@@ -31,9 +31,8 @@ from PIL import ImageFont
 
 import filequeue
 from lib_tft24T import TFT24T
-import spidev
+import util
 
-import zeroconf
 
 # For LCD TFT GPIOs. Numbering is GPIO.
 DC = 26
@@ -42,29 +41,6 @@ LED = 23
 
 # Constants
 ICON_SIZE = 30
-INET_RE = re.compile(' +inet ([^ ]+) .*')
-ETHER_RE = re.compile(' +ether ([^ ]+) .*')
-
-
-def ifconfig():
-    ipaddress = '...'
-    macaddress = '...'
-
-    ifconfig = subprocess.check_output('/sbin/ifconfig wlan0', shell=True)
-    for line in str(ifconfig).split('\n'):
-        m = INET_RE.match(line)
-        if m:
-            ipaddress = m.group(1)
-            print('%s ipaddress is %s' %(datetime.datetime.now(),
-                                         ipaddress))
-
-        m = ETHER_RE.match(line)
-        if m:
-            macaddress = m.group(1)
-            print('%s macaddress is %s' %(datetime.datetime.now(),
-                                          macaddress))
-
-    return ipaddress, macaddress
 
 
 print('%s Started' % datetime.datetime.now())
@@ -101,19 +77,29 @@ for proc in psutil.process_iter():
             os.kill(pinfo['pid'], 9)
 
 # Determine our network info
-ipaddress, macaddress = ifconfig()
+ipaddress, macaddress = util.ifconfig()
 
 # Find server
-zc = zeroconf.Zeroconf()
-si = zc.get_service_info('_http._tcp.local.', 'gangserver._http._tcp.local.')
-server_address = socket.inet_ntoa(si.address)
-server_port = int(si.port)
-print('%s Found server at %s:%d' %(datetime.datetime.now(), server_address,
-                                   server_port))
-            
-# Read config from server
-with open('gangserver/config.json') as f:
+server_address, server_port = util.lookup_server()
+
+# Read config from server, if required
+config_path = os.path.expanduser('~/.gangscan.json')
+connected, configuration_data = util.heartbeat_server(server_address,
+                                                      server_port,
+                                                      macaddress)
+if not connected and not os.path.exists(config_path):
+    print('%s Could not contact server for first run! Aborting.'
+          % datetime.datetime.now())
+    sys.exit(1)
+
+if connected and configuration_data:
+    with open(config_path, 'w') as f:
+        f.write(json.dumps(configuration_data, indent=4, sort_keys=True))
+
+with open(config_path) as f:
     config = json.loads(f.read())
+
+# Create the file queue
 queue = filequeue.FileQueue('gangscan-%s' % config['device-name'])
 
 # Objects we need to draw things
@@ -233,20 +219,12 @@ try:
             # Determine IP address
             ipaddress = '...'
             last_netcheck_time = time.time()
-            ipaddress, macaddress = ifconfig()
+            ipaddress, macaddress = util.ifconfig()
 
             # Check for the server
-            try:
-                connected = False
-                r = requests.get('%s/health/%s' %(config['server'],
-                                                  config['device-name']))
-                print('%s Connectivity check HTTP status code: %s'
-                      %(datetime.datetime.now(), r.status_code))
-                if r.status_code == 200:
-                    connected = True
-            except Exception as e:
-                print('%s Connectivity check error: %s'
-                      %(datetime.datetime.now(), e))
+            connected, _ = util.heartbeat_server(server_address,
+                                                 server_port,
+                                                 macaddress)
 
         elif time.time() - last_status_time > 5:
             last_status_time = time.time()
