@@ -45,8 +45,8 @@ the next steps.
 * Install ansible:
   * `sudo apt-get install python3-pip`
   * `sudo pip3 install ansible`
-* Install git and clone gangscan:
-  * `sudo apt-get install git`
+* Install git and vim, then clone gangscan:
+  * `sudo apt-get install git vim`
   * `git clone https://github.com/mikalstill/gangscan`
   * `cd gangscan`
   * `git submodule update --init --recursive`
