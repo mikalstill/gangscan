@@ -72,7 +72,7 @@ for proc in psutil.process_iter():
         # Process ended before we got to kill it!
         pass
     else:
-        if pinfo['cmdline'] == ['/usr/bin/python', 'read_rfid.py']:
+        if pinfo['cmdline'] == ['/usr/bin/python3', 'read_rfid.py']:
             print('%s Found process: %s' %(datetime.datetime.now(), pinfo))
             print('%s Killing stale process' % datetime.datetime.now())
             os.kill(pinfo['pid'], 9)

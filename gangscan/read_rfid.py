@@ -8,7 +8,7 @@ import time
 import RPi.GPIO as GPIO
 from mfrc522 import SimpleMFRC522
 
-reader = SimpleMFRC522(bus=0, device=1, pin_rst=36, pin_mode=GPIO.BOARD)
+reader = SimpleMFRC522(bus=0, device=1, pin_rst=36)
 
 with open('gangserver/config.json') as f:
     config = json.loads(f.read())
