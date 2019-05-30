@@ -12,8 +12,8 @@ from mfrc522 import SimpleMFRC522
 reader = SimpleMFRC522(bus=0, device=1, pin_rst=36)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('presharedkey')
-parser.add_argument('linger', type=int)
+parser.add_argument('--presharedkey')
+parser.add_argument('--linger', type=int)
 args = parser.parse_args()
 
 last_read = None
