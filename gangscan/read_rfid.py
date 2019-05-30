@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import argparse
 import hashlib
 import json
 import sys
@@ -10,8 +11,10 @@ from mfrc522 import SimpleMFRC522
 
 reader = SimpleMFRC522(bus=0, device=1, pin_rst=36)
 
-with open('gangserver/config.json') as f:
-    config = json.loads(f.read())
+parser = argparse.ArgumentParser()
+parser.add_argument('presharedkey')
+parser.add_argument('linger', type=int)
+args = parser.parse_args()
 
 last_read = None
 last_read_time = 0
@@ -26,7 +29,7 @@ try:
         h = hashlib.sha256()
         h.update(owner.encode('utf-8'))
         h.update(str(cardid).encode('utf-8'))
-        h.update(config['pre-shared-key'].encode('utf-8'))
+        h.update(args.presharedkey.encode('utf-8'))
         s = h.hexdigest()[-6:]
 
         outcome = True
@@ -44,7 +47,7 @@ try:
             last_read = data
             last_read_time = time.time()
 
-        elif time.time() - last_read_time > config['name-linger'] - 1:
+        elif time.time() - last_read_time > args.linger - 1:
             last_read = None
             last_read_time = time.time()
 

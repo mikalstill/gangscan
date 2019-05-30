@@ -43,6 +43,29 @@ LED = 23
 # Constants
 ICON_SIZE = 30
 INET_RE = re.compile(' +inet ([^ ]+) .*')
+ETHER_RE = re.compile(' +ether ([^ ]+) .*')
+
+
+def ifconfig():
+    ipaddress = '...'
+    macaddress = '...'
+
+    ifconfig = subprocess.check_output('/sbin/ifconfig wlan0', shell=True)
+    for line in str(ifconfig).split('\n'):
+        m = INET_RE.match(line)
+        if m:
+            ipaddress = m.group(1)
+            print('%s ipaddress is %s' %(datetime.datetime.now(),
+                                         ipaddress))
+
+        m = ETHER_RE.match(line)
+        if m:
+            macaddress = m.group(1)
+            print('%s macaddress is %s' %(datetime.datetime.now(),
+                                          macaddress))
+
+    return ipaddress, macaddress
+
 
 print('%s Started' % datetime.datetime.now())
 
@@ -76,6 +99,9 @@ for proc in psutil.process_iter():
             print('%s Found process: %s' %(datetime.datetime.now(), pinfo))
             print('%s Killing stale process' % datetime.datetime.now())
             os.kill(pinfo['pid'], 9)
+
+# Determine our network info
+ipaddress, macaddress = ifconfig()
 
 # Find server
 zc = zeroconf.Zeroconf()
@@ -120,7 +146,9 @@ for (icon_name, icon, font, inset) in [
 # Start the RFID reader process
 (pipe_read, pipe_write) = os.pipe()
 reader_flo = os.fdopen(pipe_read)
-reader = subprocess.Popen('/usr/bin/python3 gangscan/read_rfid.py',
+reader = subprocess.Popen(('/usr/bin/python3 gangscan/read_rfid.py '
+                           '--presharedkey=%s --linger=%d'
+                           %(config['pre-shared-key'], config['name-linger'])),
                           shell=True, stdout=pipe_write, stderr=pipe_write)
 
 last_scanned = None
@@ -205,15 +233,7 @@ try:
             # Determine IP address
             ipaddress = '...'
             last_netcheck_time = time.time()
-
-            ifconfig = subprocess.check_output('/sbin/ifconfig wlan0',
-                                               shell=True)
-            for line in str(ifconfig).split('\n'):
-                m = INET_RE.match(line)
-                if m:
-                    ipaddress = m.group(1)
-                    print('%s ipaddress is %s' %(datetime.datetime.now(),
-                                                 ipaddress))
+            ipaddress, macaddress = ifconfig()
 
             # Check for the server
             try:
