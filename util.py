@@ -37,31 +37,36 @@ def lookup_server():
     zc = zeroconf.Zeroconf()
     si = zc.get_service_info('_http._tcp.local.',
                              'gangserver._http._tcp.local.')
-    if si.address:
+    if si:
         server_address = socket.inet_ntoa(si.address)
         server_port = int(si.port)
         log('Found server at %s:%d' %(server_address, server_port))
+        return server_address, server_port
+
     else:
         log('Server not found')
-
-    return server_address, server_port
+        return None, None
 
 
 def heartbeat_server(address, port, deviceid):
     connected = False
     config = None
 
-    try:
-        check_url = 'http://%s:%d/health/%s' %(address, port, deviceid)
-        r = requests.get(check_url)
-        log('Connectivity check URL: %s' % check_url)
-        log('Connectivity check HTTP status code: %s' % r.status_code)
-        if r.status_code == 200:
-            connected = True
-            config = json.loads(r.text)
+    if address and port:
+        try:
+            check_url = 'http://%s:%d/health/%s' %(address, port, deviceid)
+            r = requests.get(check_url)
+            log('Connectivity check URL: %s' % check_url)
+            log('Connectivity check HTTP status code: %s' % r.status_code)
+            if r.status_code == 200:
+                connected = True
+                config = json.loads(r.text)
 
-    except Exception as e:
-        log('Connectivity check error: %s' % e)
+        except Exception as e:
+            log('Connectivity check error: %s' % e)
+
+    else:
+        log('Not connectivity checking a missing server')
 
     return connected, config
 
