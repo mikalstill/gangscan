@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import os
 import re
 import requests
 import socket
@@ -67,6 +68,22 @@ def heartbeat_server(address, port, deviceid):
 
     else:
         log('Not connectivity checking a missing server')
+
+    return connected, config
+
+
+def heartbeat_and_update_config(process, config):
+    config_path = os.path.expanduser('~/.%s.json' % process)
+    ipaddress, macaddress = ifconfig()
+    server_address, server_port = lookup_server()
+
+    if server_address:
+        connected, config = heartbeat_server(server_address, server_port,
+                                             macaddress)
+
+        if connected and config:
+            with open(config_path, 'w') as f:
+                f.write(json.dumps(config, indent=4, sort_keys=True))
 
     return connected, config
 

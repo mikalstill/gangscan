@@ -78,23 +78,15 @@ for proc in psutil.process_iter():
 # Determine our network info
 ipaddress, macaddress = util.ifconfig()
 
-# Find server
-server_address, server_port = util.lookup_server()
-
 # Read config from server, if required
-config_path = os.path.expanduser('~/.gangscan.json')
-configuration_data = None
-if server_address:
-    connected, configuration_data = util.heartbeat_server(server_address,
-                                                          server_port,
-                                                          macaddress)
+config = {}
+config_path = os.path.expanduser('~/gangscan.json')
+if os.path.exists(config_path):
+    with open(config_path) as f:
+        config = json.loads(f.read())
 
-    if connected and configuration_data:
-        with open(config_path, 'w') as f:
-            f.write(json.dumps(configuration_data, indent=4, sort_keys=True))
-
-with open(config_path) as f:
-    config = json.loads(f.read())
+# Ensure an updated config if there is one
+connected, config = util.heartbeat_and_update_config('gangscan', config)
 
 # Create the file queue
 queue = filequeue.FileQueue('gangscan-%s' % config['device-name'])
@@ -215,12 +207,9 @@ try:
             # Determine IP address
             ipaddress = '...'
             last_netcheck_time = time.time()
-            ipaddress, macaddress = util.ifconfig()
-
-            # Check for the server
-            connected, _ = util.heartbeat_server(server_address,
-                                                 server_port,
-                                                 macaddress)
+            ipaddress, _ = util.ifconfig()
+            connected, config = util.heartbeat_and_update_config('gangscan',
+                                                                 config)
 
         elif time.time() - last_status_time > 5:
             last_status_time = time.time()
