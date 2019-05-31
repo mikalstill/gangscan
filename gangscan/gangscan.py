@@ -43,6 +43,16 @@ LED = 23
 ICON_SIZE = 30
 
 
+def new_icon(icon, font, inset):
+    img = Image.new('RGBA', (320, 240))
+    img_writer = ImageDraw.Draw(img)
+    width, height = img_writer.textsize(icon, font=font)
+    img_writer.text(((ICON_SIZE - width) / 2 + 5, inset + 5),
+                    icon, fill='black', font=font)
+    util.log('Loaded %s icon' % icon_name)
+    return img
+
+
 util.log('Started')
 
 # Setup GPIO
@@ -109,14 +119,7 @@ for (icon_name, icon, font, inset) in [
         ('connect_on', chr(0xf1f5), icons, ICON_SIZE + 5),
         ('connect_off', chr(0xf1f8), icons, ICON_SIZE),
         ('location', config['location'], text, (ICON_SIZE + 5) * 2)]:
-    img = Image.new('RGBA', (320, 240))
-    img_writer = ImageDraw.Draw(img)
-    width, height = img_writer.textsize(icon, font=font)
-    img_writer.text(((ICON_SIZE - width) / 2 + 5, inset + 5),
-                    icon, fill='black', font=font)
-
-    images[icon_name] = img
-    util.log('Loaded %s icon' % icon_name)
+    images[icon_name] = new_icon(icon, font, inset)
     
 # Start the RFID reader process
 (pipe_read, pipe_write) = os.pipe()
@@ -208,8 +211,13 @@ try:
             ipaddress = '...'
             last_netcheck_time = time.time()
             ipaddress, _ = util.ifconfig()
+
+            old_location = config['location']
             connected, config = util.heartbeat_and_update_config('gangscan',
                                                                  config)
+            if config['location'] != old_location:
+                images['location'] = new_icon(config['location'], text,
+                                              (ICON_SIZE + 5) * 2)
 
         elif time.time() - last_status_time > 5:
             last_status_time = time.time()
