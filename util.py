@@ -77,6 +77,7 @@ def heartbeat_and_update_config(process, config):
     ipaddress, macaddress = ifconfig()
     server_address, server_port = lookup_server()
 
+    connected = False
     if server_address:
         connected, config = heartbeat_server(server_address, server_port,
                                              macaddress)
