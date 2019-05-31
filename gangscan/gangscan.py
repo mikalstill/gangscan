@@ -90,7 +90,7 @@ ipaddress, macaddress = util.ifconfig()
 
 # Read config from server, if required
 config = {}
-config_path = os.path.expanduser('~/gangscan.json')
+config_path = os.path.expanduser('~/.gangscan.json')
 if os.path.exists(config_path):
     with open(config_path) as f:
         config = json.loads(f.read())

@@ -86,6 +86,7 @@ def heartbeat_and_update_config(process, config):
             with open(config_path, 'w') as f:
                 f.write(json.dumps(config, indent=4, sort_keys=True))
 
+    log('Heartbeat is returning this config: %s' % config)
     return connected, config
 
 
