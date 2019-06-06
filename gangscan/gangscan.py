@@ -145,6 +145,7 @@ try:
                 data = queue.read_event('new', event_id)
                 data['timestamp-transferred'] = time.time()
                 try:
+                    server_address, server_port = util.lookup_server()
                     r = requests.put('http://%s:%d/event/%s'
                                      %(server_address, server_port,
                                        event_id),
@@ -185,6 +186,7 @@ try:
                     data['timestamp-transferred'] = time.time()
 
                     try:
+                        server_address, server_port = util.lookup_server()
                         r = requests.put('http://%s:%d/event/%s'
                                          %(server_address, server_port,
                                            event_id),

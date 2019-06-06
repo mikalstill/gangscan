@@ -9,7 +9,7 @@ import time
 import RPi.GPIO as GPIO
 from mfrc522 import SimpleMFRC522
 
-reader = SimpleMFRC522(bus=0, device=1, pin_rst=36)
+reader = SimpleMFRC522(bus=0, device=1, pin_rst=36, gain=48)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--presharedkey')
