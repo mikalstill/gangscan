@@ -17,6 +17,7 @@ The structure of this repository is:
 * eagle: PCB layouts for the gang scan hardware.
 * gangscan: the software stack for the badge readers.
 * gangserver: the server side of the application.
+* idcards: is a simple ID card art generation script with sample data. See the README in that directory for more detail.
 * vendor: git sub-modules for dependancies.
 
 Installation: Common Steps

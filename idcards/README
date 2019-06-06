@@ -1,0 +1,13 @@
+Generate new id cards
+=====================
+
+Don't care about my life story? Just want to quickly generate gang show id
+cards? Sure. Read this bit.
+
+First off, you need to setup the python environment for the script. These
+instructions work on MacOS and Linux, I haven't tested them on Windows...
+
+# mkdir -p ~/virtualenvs/gangshow
+# virtualenv ~/virtualenvs/gangshow
+# . ~/virtualenvs/gangshow/bin/activate
+# pip install -U -r requirements.txt
