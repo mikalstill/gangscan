@@ -99,7 +99,8 @@ if os.path.exists(config_path):
 connected, config = util.heartbeat_and_update_config('gangscan', config)
 
 # Create the file queue
-queue = filequeue.FileQueue('gangscan-%s' % config['device-name'])
+queue = filequeue.FileQueue(
+    os.path.expanduser('~/gangscan-%s' % config['device-name']))
 
 # Objects we need to draw things
 icons = ImageFont.truetype('gangscan/materialdesignicons-webfont.ttf',

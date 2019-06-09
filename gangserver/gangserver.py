@@ -27,10 +27,10 @@ api = Api(app)
 ipaddress, macaddress = util.ifconfig()
 
 # Read config and data
-with open('gangserver/config.json') as f:
+with open(os.path.expanduser('~/gangserver-config.json')) as f:
     config = json.loads(f.read())
 
-queue = filequeue.FileQueue('gangserver-%s' % macaddress)
+queue = filequeue.FileQueue(os.path.expanduser('~/gangserver-%s' % macaddress))
 mimetypes.init()
 
 
@@ -39,9 +39,9 @@ class Root(Resource):
         # Read template and data
         with open('gangserver/report.html.tmpl') as f:
             t = Template(f.read())
-        with open('gangserver/groupings.json') as f:
+        with open(os.path.expanduser('~/gangserver-groupings.json')) as f:
             groupings = json.loads(f.read())
-        with open('gangserver/status.json') as f:
+        with open(os.path.expanduser('~/gangserver-status.json')) as f:
             status = json.loads(f.read())
 
         # Rearrange the data
@@ -106,7 +106,8 @@ class Health(Resource):
 
 class Event(Resource):
     def __init__(self):
-        self.queue = filequeue.FileQueue('gangserver-%s' % macaddress)
+        self.queue = filequeue.FileQueue(
+            os.path.expanduser('~/gangserver-%s' % macaddress))
 
     def put(self, event_id):
         data = json.loads(request.form['data'])
@@ -126,10 +127,10 @@ class Event(Resource):
         #     "timestamp-server": 1553634528.421658, 
         #     "timestamp-transferred": 1553634527.924872
         # }
-        with open('gangserver/status.json') as f:
+        with open(os.path.expanduser('~/gangserver-status.json')) as f:
             status = json.loads(f.read())
         status[data['owner']] = data['location']
-        with open('gangserver/status.json', 'w') as f:
+        with open(os.path.expanduser('~/gangserver-status.json'), 'w') as f:
             f.write(json.dumps(status, indent=4, sort_keys=True))
 
         util.log('Stored event %s: %s' %(event_id, data))

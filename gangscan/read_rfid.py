@@ -9,6 +9,8 @@ import time
 import RPi.GPIO as GPIO
 from mfrc522 import SimpleMFRC522
 
+HASH_LEN = 34
+
 reader = SimpleMFRC522(bus=0, device=1, pin_rst=36, gain=48)
 
 parser = argparse.ArgumentParser()
@@ -23,14 +25,14 @@ try:
     while True:
         cardid, text = reader.read()
         text = text.rstrip(' ')
-        owner = text[:-6]
-        sig = text[-6:]
+        owner = text[:-HASH_LEN]
+        sig = text[-HASH_LEN:]
 
         h = hashlib.sha256()
         h.update(owner.encode('utf-8'))
         h.update(str(cardid).encode('utf-8'))
         h.update(args.presharedkey.encode('utf-8'))
-        s = h.hexdigest()[-6:]
+        s = h.hexdigest()[-HASH_LEN:]
 
         outcome = True
         if s != sig:

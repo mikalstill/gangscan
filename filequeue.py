@@ -6,7 +6,7 @@ import os
 
 class FileQueue(object):
     def __init__(self, queue_name):
-        self.queue_dir = 'queue-%s' % queue_name
+        self.queue_dir = queue_name
 
         if not os.path.exists(self.queue_dir):
             os.mkdir(self.queue_dir)
