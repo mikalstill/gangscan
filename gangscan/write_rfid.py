@@ -6,7 +6,7 @@
 # Run like this:
 #
 # python3 gangscan/write_rfid.py --presharedkey wibble --linger 3 \
-#   --startwith "Fred Nerk"
+#   --db idcards/db.csv --startwith "Fred Nerk"
 
 import argparse
 import csv
@@ -23,11 +23,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--presharedkey')
 parser.add_argument('--linger', type=int)
 parser.add_argument('--startwith')
+parser.add_argument('--db')
 args = parser.parse_args()
 
 processing = False
 try:
-    with open('idcards/db.csv') as f:
+    with open(args.db) as f:
         csvreader = csv.DictReader(f)
         print('We have these fields: %s' % csvreader.fieldnames)
         for row in csvreader:
@@ -59,7 +60,7 @@ try:
             attempts = 0
             while attempts < 5:
                 try:
-                    reader.write('%s%s' %(owner, h.hexdigest()))
+                    reader.write('%s,%s' %(owner, h.hexdigest()[-6:]))
                     break
                 except Exception as e:
                     print('Write failed (attempt %d): %s' %(attempts, e))

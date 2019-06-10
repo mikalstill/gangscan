@@ -4,37 +4,14 @@
     <meta http-equiv="refresh" content="30">
   </head>
   <body>
-    <table width=100%>
-      <tr>
-	<td width=50%><div align=center>In</div><br/></td>
-	<td width=50%><div align=center>Out</div><br/></td></tr>
-      <tr>
-	<td>
-	  {%- for grouping in in_groups %}
-	  <b>{{grouping.name}}</b>
-	  <ul>
-	    {%- for member in grouping.members %}
-	    <li><img src="/local/account.png"> {{member}}
-	    {%- endfor %}
-	  </ul>
-
-	  <br/><br/>
-          {%- endfor %}
-        </td>
-	<td>
-	  {%- for grouping in out_groups %}
-	  <b>{{grouping.name}}</b>
-	  <ul>
-	    {%- for member in grouping.members %}
-	    <li><img src="/local/account.png"> {{member}}
-	    {%- endfor %}
-	  </ul>
-
-	  <br/>
-          {%- endfor %}
-	</td>
-      </tr>
-      </table>
+    {%- for grouping in groups %}
+    <b>{{grouping.name}}</b>
+    <ul>
+      {%- for member in grouping.members %}
+      <li><img src="/local/{{member.location}}.png" title="{{member.location}}"> {{member.name}}
+	{%- endfor %}
+    </ul>
+    {%- endfor %}
 
     <br/><br/>
 

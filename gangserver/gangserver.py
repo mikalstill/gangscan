@@ -45,36 +45,24 @@ class Root(Resource):
             status = json.loads(f.read())
 
         # Rearrange the data
-        person_to_group = {}
+        groups = []
         for group in groupings:
+            members = []
             for person in groupings[group]:
-                person_to_group[person] = group
-        
-        by_group = {}
-        for person in status:
-            by_group.setdefault(person_to_group[person], {})
-            by_group[person_to_group[person]].setdefault('in', [])
-            by_group[person_to_group[person]].setdefault('out', [])
-            by_group[person_to_group[person]][status[person]].append(person)
+                where = status[person]
+                members.append({'name': person,
+                                'location': where})
 
-        in_groups = []
-        out_groups = []
-        for group in by_group:
-            in_groups.append({
+            groups.append({
                 'name': group,
-                'members': by_group[group]['in']
+                'members': members
             })
-            out_groups.append({
-                'name': group,
-                'members': by_group[group]['out']
-            })
-        
+
         # Do a dance to return HTML not JSON
         resp = Response(
             t.render(
                 timestamp=str(datetime.datetime.now()),
-                in_groups=in_groups,
-                out_groups=out_groups
+                groups=groups
             ),
             mimetype='text/html')
         resp.status_code = 200
