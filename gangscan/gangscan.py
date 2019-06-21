@@ -96,7 +96,8 @@ if os.path.exists(config_path):
         config = json.loads(f.read())
 
 # Ensure an updated config if there is one
-connected, config = util.heartbeat_and_update_config('gangscan', config)
+connected, config, server_addres, server_port = \
+    util.heartbeat_and_update_config('gangscan', config)
 
 # Create the file queue
 queue = filequeue.FileQueue(
@@ -138,6 +139,68 @@ ipaddress = '...'
 connected = False
 last_netcheck_time = 0
 
+def draw_status():
+    global last_status_time
+
+    status = images['logo']
+
+    # Paint status icons
+    if ipaddress != '...':
+        status = Image.alpha_composite(status, images['wifi_on'])
+    else:
+        status = Image.alpha_composite(status, images['wifi_off'])
+
+    if connected:
+        status = Image.alpha_composite(status, images['connect_on'])
+    else:
+        status = Image.alpha_composite(status, images['connect_off'])
+
+    status = Image.alpha_composite(status, images['location'])
+
+    now = datetime.datetime.now()
+    status_writer = ImageDraw.Draw(status)
+
+    # Display time
+    status_writer.text((5, 240 - (ICON_SIZE / 2) - 5),
+                       '%02d:%02d' % (now.hour, now.minute),
+                       fill='black',
+                       font=small_text)
+
+    # Display queue size
+    queued_string = '%d queued' % queue.count_events('new')
+    width, height = status_writer.textsize(
+        queued_string,
+        font=small_text)
+    status_writer.text((320 - width - 5, 240 - (ICON_SIZE / 2) - 5),
+                       queued_string,
+                       fill='black',
+                       font=small_text)
+
+    # Display network address
+    width, height = status_writer.textsize(ipaddress, font=small_text)
+    status_writer.text(((320 - width) / 2, 240 - (ICON_SIZE / 2) - 5),
+                       ipaddress,
+                       fill='black',
+                       font=small_text)
+
+    # Display recently scanned person
+    if time.time() - last_scanned_time < config['name-linger']:
+        width, height = status_writer.textsize(
+            last_scanned, font=giant_text)
+        status_writer.rectangle(
+            (160 - width / 2 - 5, 120 - height / 2 - 5,
+             160 + width / 2 + 5, 120 + height / 2 + 5),
+            fill='white')
+        status_writer.text(
+            ((320 - width) / 2, (240 - height) / 2),
+            last_scanned,
+            fill='green',
+            font=giant_text)
+
+    last_status_time = time.time()
+    TFT.display(status.rotate(90, resample=0, expand=1))
+    util.uptime()
+
 try:
     while reader.poll() is None:
         if connected:
@@ -146,7 +209,6 @@ try:
                 data = queue.read_event('new', event_id)
                 data['timestamp-transferred'] = time.time()
                 try:
-                    server_address, server_port = util.lookup_server()
                     r = requests.put('http://%s:%d/event/%s'
                                      %(server_address, server_port,
                                        event_id),
@@ -159,6 +221,12 @@ try:
                     util.log('Failed to stream queued event %s: %s'
                              %(event_id, e))
                     connected = False
+
+        if not connected:
+            util.log('Not connected, looking for a server')
+            server_address, server_port = util.lookup_server()
+            if server_address and server_port:
+                connected = True
 
         if len(select.select([pipe_read], [], [], 0)[0]) == 1:
             scan = reader_flo.readline().rstrip('\n')
@@ -184,27 +252,9 @@ try:
                     data['signature'] = h.hexdigest()
 
                     queue.store_event('new', event_id, data)
-                    data['timestamp-transferred'] = time.time()
 
-                    try:
-                        server_address, server_port = util.lookup_server()
-                        r = requests.put('http://%s:%d/event/%s'
-                                         %(server_address, server_port,
-                                           event_id),
-                                         data={'data': json.dumps(data)})
-                        if r.status_code == 200:
-                            util.log('Wrote event %s' % event_id)
-                            queue.change_state('new', 'sent', event_id)
-                        else:
-                            # Failed to write event to server
-                            util.log('Failed to store event %s with HTTP '
-                                     'status %s'
-                                     %(event_id, r.status_code))
-
-                    except Exception as e:
-                        # Failed to stream event to server
-                        util.log('Failed to stream event %s: %s'
-                                 %(event_id, e))
+                    util.log('Forced update of status screen')
+                    draw_status()
 
             except Exception as e:
                 util.log('Ignoring malformed data: %s' % e)
@@ -216,71 +266,15 @@ try:
             ipaddress, _ = util.ifconfig()
 
             old_location = config['location']
-            connected, config = util.heartbeat_and_update_config('gangscan',
-                                                                 config)
-            if config['location'] != old_location:
+            connected, config, server_address, server_port = \
+                util.heartbeat_and_update_config('gangscan', config)
+            if config and config['location'] != old_location:
                 images['location'] = new_icon(config['location'], text,
                                               (ICON_SIZE + 5) * 2)
 
         elif time.time() - last_status_time > 5:
-            last_status_time = time.time()
             util.log('Updating status screen')
-            status = images['logo']
-
-            # Paint status icons
-            if ipaddress != '...':
-                status = Image.alpha_composite(status, images['wifi_on'])
-            else:
-                status = Image.alpha_composite(status, images['wifi_off'])
-
-            if connected:
-                status = Image.alpha_composite(status, images['connect_on'])
-            else:
-                status = Image.alpha_composite(status, images['connect_off'])
-
-            status = Image.alpha_composite(status, images['location'])
-
-            now = datetime.datetime.now()
-            status_writer = ImageDraw.Draw(status)
-
-            # Display time
-            status_writer.text((5, 240 - (ICON_SIZE / 2) - 5),
-                               '%02d:%02d' % (now.hour, now.minute),
-                               fill='black',
-                               font=small_text)
-
-            # Display queue size
-            queued_string = '%d queued' % queue.count_events('new')
-            width, height = status_writer.textsize(
-                queued_string,
-                font=small_text)
-            status_writer.text((320 - width - 5, 240 - (ICON_SIZE / 2) - 5),
-                               queued_string,
-                               fill='black',
-                               font=small_text)
-
-            # Display network address
-            width, height = status_writer.textsize(ipaddress, font=small_text)
-            status_writer.text(((320 - width) / 2, 240 - (ICON_SIZE / 2) - 5),
-                               ipaddress,
-                               fill='black',
-                               font=small_text)
-
-            # Display recently scanned person
-            if time.time() - last_scanned_time < config['name-linger']:
-                width, height = status_writer.textsize(
-                    last_scanned, font=giant_text)
-                status_writer.rectangle(
-                    (160 - width / 2 - 5, 120 - height / 2 - 5,
-                     160 + width / 2 + 5, 120 + height / 2 + 5),
-                    fill='white')
-                status_writer.text(
-                    ((320 - width) / 2, (240 - height) / 2),
-                    last_scanned,
-                    fill='green',
-                    font=giant_text)
-
-            TFT.display(status.rotate(90, resample=0, expand=1))
+            draw_status()
 
     # The RFID reader process exitted?
     os.close(pipe_read)

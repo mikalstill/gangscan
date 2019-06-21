@@ -33,6 +33,9 @@ def ifconfig():
 
     return ipaddress, macaddress
 
+def uptime():
+    log(subprocess.check_output('/usr/bin/uptime', shell=True).decode('utf-8'))
+
 
 def lookup_server():
     zc = zeroconf.Zeroconf()
@@ -87,7 +90,7 @@ def heartbeat_and_update_config(process, config):
                 f.write(json.dumps(config, indent=4, sort_keys=True))
 
     log('Heartbeat is returning this config: %s' % config)
-    return connected, config
+    return connected, config, server_address, server_port
 
 
 def log(s):

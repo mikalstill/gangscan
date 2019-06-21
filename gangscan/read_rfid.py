@@ -11,8 +11,6 @@ GPIO.setwarnings(False)
 
 from mfrc522 import SimpleMFRC522
 
-reader = SimpleMFRC522(bus=0, device=1, pin_rst=36, gain=48)
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--presharedkey')
 parser.add_argument('--linger', type=int)
@@ -23,33 +21,41 @@ last_read_time = 0
 
 try:
     while True:
-        cardid, text = reader.read()
-        owner, sig = text.rstrip(' ').split(',')
+        try:
+            reader = SimpleMFRC522(bus=0, device=1, pin_rst=36) #, gain=48)
 
-        h = hashlib.sha256()
-        h.update(owner.encode('utf-8'))
-        h.update(str(cardid).encode('utf-8'))
-        h.update(args.presharedkey.encode('utf-8'))
-        s = h.hexdigest()[-6:]
+            cardid, text = reader.read()
+            owner, sig = text.rstrip(' ').split(',')
 
-        outcome = True
-        if s != sig:
-            outcome = False
+            h = hashlib.sha256()
+            h.update(owner.encode('utf-8'))
+            h.update(str(cardid).encode('utf-8'))
+            h.update(args.presharedkey.encode('utf-8'))
+            s = h.hexdigest()[-6:]
 
-        data = {'cardid': cardid,
-                'owner': owner,
-                'sha': sig,
-                'outcome': outcome}
+            outcome = True
+            if s != sig:
+                outcome = False
 
-        if last_read != data:
-            print(json.dumps(data))
-            sys.stdout.flush()
-            last_read = data
-            last_read_time = time.time()
+            data = {'cardid': cardid,
+                    'owner': owner,
+                    'sha': sig,
+                    'outcome': outcome}
 
-        elif time.time() - last_read_time > args.linger - 1:
-            last_read = None
-            last_read_time = time.time()
+            if last_read != data:
+                print(json.dumps(data))
+                sys.stdout.flush()
+                last_read = data
+                last_read_time = time.time()
+
+                time.sleep(0.5)
+
+            elif time.time() - last_read_time > args.linger - 1:
+                last_read = None
+                last_read_time = time.time()
+
+        except Exception as e:
+            pass
 
 finally:
     GPIO.cleanup()
