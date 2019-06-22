@@ -192,10 +192,15 @@ def draw_status():
             (160 - width / 2 - 5, 120 - height / 2 - 5,
              160 + width / 2 + 5, 120 + height / 2 + 5),
             fill='white')
+
+        fill='green'
+        if last_scanned == '???':
+            fill='red'
+
         status_writer.text(
             ((320 - width) / 2, (240 - height) / 2),
             last_scanned,
-            fill='green',
+            fill=fill,
             font=giant_text)
 
     last_status_time = time.time()
@@ -234,6 +239,9 @@ try:
             util.log('RFID reader said: %s' % scan)
 
             if scan[0] == 'E':
+                last_scanned = '???'
+                last_scanned_time = time.time()
+                last_status_time = 0
                 continue
 
             try:
