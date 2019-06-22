@@ -233,6 +233,9 @@ try:
             scan = reader_flo.readline().rstrip('\n')
             util.log('RFID reader said: %s' % scan)
 
+            if scan[0] == 'E':
+                continue
+
             try:
                 data = json.loads(scan)
                 util.log('Parsed: %s' % data)
