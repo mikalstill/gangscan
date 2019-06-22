@@ -109,6 +109,7 @@ icons = ImageFont.truetype('gangscan/materialdesignicons-webfont.ttf',
                            ICON_SIZE)
 text = ImageFont.truetype('gangscan/BebasNeue.ttf', ICON_SIZE)
 small_text = ImageFont.truetype('gangscan/BebasNeue.ttf', int(ICON_SIZE / 2))
+medium_text = ImageFont.truetype('gangscan/BebasNeue.ttf', int(ICON_SIZE * 1))
 giant_text = ImageFont.truetype('gangscan/BebasNeue.ttf', int(ICON_SIZE * 1.3))
 
 images = {}
@@ -186,8 +187,12 @@ def draw_status():
 
     # Display recently scanned person
     if time.time() - last_scanned_time < config['name-linger']:
+        font = giant_text
+        if len(last_scanned) > 20:
+            font = medium_text
+
         width, height = status_writer.textsize(
-            last_scanned, font=giant_text)
+            last_scanned, font=font)
         status_writer.rectangle(
             (160 - width / 2 - 5, 120 - height / 2 - 5,
              160 + width / 2 + 5, 120 + height / 2 + 5),
@@ -201,7 +206,7 @@ def draw_status():
             ((320 - width) / 2, (240 - height) / 2),
             last_scanned,
             fill=fill,
-            font=giant_text)
+            font=font)
 
     last_status_time = time.time()
     TFT.display(status.rotate(90, resample=0, expand=1))

@@ -92,10 +92,7 @@ while run:
     # Verify the read data
     try:
         owner, sig = text.rstrip(' ').split(',')
-    except Exception as e:
-        log('Data in wrong format: %s --> %s' %(text.rstrip(), e))
 
-    try:
         h = hashlib.sha256()
         h.update(owner.encode('utf-8'))
         h.update(str(cardid).encode('utf-8'))
@@ -111,7 +108,7 @@ while run:
                 'sha': sig,
                 'outcome': outcome}
 
-        if last_read != data and outcome:
+        if last_read != data:
             output(data)
             last_read = data
             last_read_time = time.time()
