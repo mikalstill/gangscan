@@ -58,11 +58,18 @@
   - name: install python raspberry pi GPIO library
     command: pip3 install -U RPi.GPIO
 
-  # MFRC522 RFID reader library
+  # MFRC522 RFID reader library (this is the original one, now used only
+  # to write cards).
   - name: install MFRC522 RFID library
     command: python3 setup.py install
     args:
       chdir: ../vendor/MFRC522-python
+
+  # A better MFRC522 RFID reader library
+  - name: install RC522 RFID library
+    command: python3 setup.py install
+    args:
+      chdir: ../vendor/pi-rc522
 
   # spidev
   - name: install spidev library
