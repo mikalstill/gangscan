@@ -21,6 +21,7 @@ import spidev
 import subprocess
 import sys
 import time
+import traceback
 import uuid
 
 import RPi.GPIO as GPIO
@@ -259,6 +260,10 @@ try:
 
             except Exception as e:
                 util.log('Ignoring malformed data: %s' % e)
+                print('-' * 60)
+                traceback.print_exc(file=sys.stdout)
+                print('-' * 60)
+                sys.stdout.flush()
 
         elif time.time() - last_netcheck_time > 30:
             # Determine IP address
