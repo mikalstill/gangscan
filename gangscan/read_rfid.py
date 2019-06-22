@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+import datetime
 import hashlib
 import json
 import signal
@@ -32,6 +33,15 @@ def uid_to_num(uid):
     return n
 
 
+def output(d):
+    print(json.dumps(d, sort_keys=True))
+    sys.stdout.flush()
+
+
+def log(s):
+    output({'when': str(datetime.datetime.now()), 'log': s, 'outcome': False})
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--presharedkey')
 parser.add_argument('--linger', type=int)
@@ -46,20 +56,24 @@ run = True
 while run:
     # Wait for a tag to appear
     rdr.wait_for_tag()
+    log('Detected card')
 
     # Read the tag
     (error, data) = rdr.request()
     if error:
+        log('Reader error')
         continue
 
     (error, uid) = rdr.anticoll()
     if error:
+        log('Collision error')
         continue
 
     cardid = uid_to_num(uid)
 
     util.set_tag(uid)
     util.auth(rdr.auth_a, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
+    log('Authenticate')
 
     text = ''
     for block in [8, 9, 10]:
@@ -69,11 +83,19 @@ while run:
             for c in data:
                 text += chr(c)
     util.deauth()
+    log('Read and deauth')
+
+    if len(text.rstrip(' ')) == 0:
+        log('No data read')
+        continue
 
     # Verify the read data
     try:
         owner, sig = text.rstrip(' ').split(',')
+    except Exception as e:
+        log('Data in wrong format: %s --> %s' %(text.rstrip(), e))
 
+    try:
         h = hashlib.sha256()
         h.update(owner.encode('utf-8'))
         h.update(str(cardid).encode('utf-8'))
@@ -90,8 +112,7 @@ while run:
                 'outcome': outcome}
 
         if last_read != data and outcome:
-            print(json.dumps(data))
-            sys.stdout.flush()
+            output(json.dumps(data))
             last_read = data
             last_read_time = time.time()
 
@@ -100,7 +121,7 @@ while run:
             last_read_time = time.time()
 
     except Exception as e:
-        pass
+        log('Exception: %s' % e)
 
     # Take a nap
     time.sleep(0.1)

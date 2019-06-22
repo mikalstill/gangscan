@@ -127,8 +127,8 @@ for (icon_name, icon, font, inset) in [
 (pipe_read, pipe_write) = os.pipe()
 reader_flo = os.fdopen(pipe_read)
 reader = subprocess.Popen(('/usr/bin/python3 gangscan/read_rfid.py '
-                           '--presharedkey=%s --linger=%d'
-                           %(config['pre-shared-key'], config['name-linger'])),
+                           '--presharedkey=%s --linger=1'
+                           % config['pre-shared-key']),
                           shell=True, stdout=pipe_write, stderr=pipe_write)
 
 last_scanned = None
@@ -234,6 +234,7 @@ try:
 
             try:
                 data = json.loads(scan)
+                util.log('Parsed: %s' % data)
                 if data['outcome'] == True:
                     last_scanned = data['owner']
                     last_scanned_time = time.time()
