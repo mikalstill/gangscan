@@ -112,7 +112,7 @@ while run:
                 'outcome': outcome}
 
         if last_read != data and outcome:
-            output(json.dumps(data))
+            output(data)
             last_read = data
             last_read_time = time.time()
 

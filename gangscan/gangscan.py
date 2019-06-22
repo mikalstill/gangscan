@@ -236,7 +236,7 @@ try:
             try:
                 data = json.loads(scan)
                 util.log('Parsed: %s' % data)
-                if data['outcome'] == True:
+                if data['outcome']:
                     last_scanned = data['owner']
                     last_scanned_time = time.time()
                     last_status_time = 0
