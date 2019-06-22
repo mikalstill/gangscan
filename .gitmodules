@@ -14,3 +14,6 @@
 	path = vendor/MFRC522-python
 	url = https://github.com/mikalstill/MFRC522-python
 	branch = master
+[submodule "vendor/pi-rc522"]
+	path = vendor/pi-rc522
+	url = https://github.com/ondryaso/pi-rc522

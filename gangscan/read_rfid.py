@@ -1,18 +1,36 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import hashlib
 import json
-import sys
+import signal
 import time
+import sys
 
 import RPi.GPIO as GPIO
-GPIO.setwarnings(False)
+from pirc522 import RFID
 
-from mfrc522 import SimpleMFRC522
+rdr = RFID(bus=0, device=1, pin_rst=16, pin_irq=19, pin_ce=7, pin_mode=GPIO.BCM)
+util = rdr.util()
+util.debug = False
 
-PIN_IRQ = 19 # (physical pin 35)
-PIN_RST = 16 # (physical pin 36)
+
+def end_read(signal,frame):
+    global run
+    print("\nCtrl+C captured, ending read.")
+    run = False
+    rdr.cleanup()
+    sys.exit()
+
+signal.signal(signal.SIGINT, end_read)
+
+
+def uid_to_num(uid):
+    n = 0
+    for i in range(0, 5):
+        n = n * 256 + uid[i]
+    return n
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--presharedkey')
@@ -24,18 +42,36 @@ last_read_time = 0
 reader = None
 
 
-def read_card(channel):
-    """Read a card based on getting an interrupt to say we should."""
+run = True
+while run:
+    # Wait for a tag to appear
+    rdr.wait_for_tag()
 
-    global last_read
-    global last_read_time
-    global reader
+    # Read the tag
+    (error, data) = rdr.request()
+    if error:
+        continue
 
-    print('Read card')
-    sys.stdout.flush()
+    (error, uid) = rdr.anticoll()
+    if error:
+        continue
 
+    cardid = uid_to_num(uid)
+
+    util.set_tag(uid)
+    util.auth(rdr.auth_a, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
+
+    text = ''
+    for block in [8, 9, 10]:
+        error = util.do_auth(block)
+        if not error:
+            error, data = util.rfid.read(block)
+            for c in data:
+                text += chr(c)
+    util.deauth()
+
+    # Verify the read data
     try:
-        cardid, text = reader.read()
         owner, sig = text.rstrip(' ').split(',')
 
         h = hashlib.sha256()
@@ -53,7 +89,7 @@ def read_card(channel):
                 'sha': sig,
                 'outcome': outcome}
 
-        if last_read != data:
+        if last_read != data and outcome:
             print(json.dumps(data))
             sys.stdout.flush()
             last_read = data
@@ -64,20 +100,7 @@ def read_card(channel):
             last_read_time = time.time()
 
     except Exception as e:
-        print('Exception: %s' % e)
+        pass
 
-
-try:
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
-    GPIO.setup(PIN_IRQ, GPIO.IN)   #, pull_up_down=GPIO.PUD_UP)
-
-    reader = SimpleMFRC522(bus=0, device=1, pin_rst=PIN_RST) #, gain=48)
-
-    GPIO.add_event_detect(PIN_IRQ, GPIO.BOTH, callback=read_card)
-
-    while True:
-        time.sleep(0.01)
-
-finally:
-    GPIO.cleanup()
+    # Take a nap
+    time.sleep(0.1)
