@@ -251,7 +251,6 @@ try:
 
             try:
                 data = json.loads(scan)
-                util.log('Parsed: %s' % data)
                 if data['outcome']:
                     last_scanned = data['owner']
                     last_scanned_time = time.time()

@@ -15,6 +15,12 @@ rdr = RFID(bus=0, device=1, pin_rst=16, pin_irq=19, pin_ce=7, pin_mode=GPIO.BCM)
 util = rdr.util()
 util.debug = False
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--presharedkey')
+parser.add_argument('--linger', type=int)
+parser.add_argument('--debug', type=bool)
+args = parser.parse_args()
+
 
 def end_read(signal,frame):
     global run
@@ -39,13 +45,11 @@ def output(d):
 
 
 def log(s):
-    output({'when': str(datetime.datetime.now()), 'log': s, 'outcome': False})
+    if args.debug:
+        output({'when': str(datetime.datetime.now()),
+                'log': s,
+                'outcome': False})
 
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--presharedkey')
-parser.add_argument('--linger', type=int)
-args = parser.parse_args()
 
 last_read = None
 last_read_time = 0
