@@ -32,30 +32,6 @@
   - name: install python flask-restful library
     command: pip3 install -U flask-restful
 
-  # We use avahi to advertise where the server is running on the network
-  - name: install avahi-daemon
-    apt:
-      name: avahi-daemon
-      state: latest
-
-  - name: install avahi-utils
-    apt:
-      name: avahi-utils
-      state: latest
-
-  - name: copy avahi service configuration
-    copy:
-      src: files/gangserver.avahi.service
-      dest: /etc/avahi/services/gangscan.service
-      owner: root
-      group: root
-      mode: '0444'
-
-  - name: restart avahi
-    service:
-      name: avahi-daemon
-      state: reloaded
-
   # Install the server itself. We run the server from the git checkout
   # location.
   - name: copy gangserver systemd configuration
@@ -66,11 +42,27 @@
       group: root
       mode: '0444'
 
+  # Install our advertisement mircoservice
+  - name: copy gangadvert systemd configuration
+    copy:
+      src: files/gangadvert.systemd.service
+      dest: /etc/systemd/system/gangadvert.service
+      owner: root
+      group: root
+      mode: '0444'
+
+  # Restart services
   - name: reload systemd itself
     command: systemctl daemon-reload
 
   - name: restart gangserver
     service:
       name: gangserver
+      state: restarted
+      enabled: yes
+
+  - name: restart gangadvert
+    service:
+      name: gangadvert
       state: restarted
       enabled: yes

@@ -55,7 +55,7 @@ the next steps.
 Installation: Gang Server
 =========================
 
-The gangserver advertises itself using mdns via avahi. It is assumed that
+The gangserver advertises itself using a homegrown UDP protocol. It is assumed that
 the server will be running on raspberry pi running debian (called raspbian).
 This can be one of the gangscan devices if that is desirable for your
 deployment. First follow the common installation steps above, once those
@@ -71,15 +71,8 @@ $ /usr/local/bin/ansible-playbook -i hosts deploy/gangserver.yml
 This should install all the required software for the gangserver, and start
 it on port 80. The server advertises itself on the network using avahi /
 zeroconf networking, so you don't need to have the server running on a
-machine with a known IP. You can verify that it is being advertized correctly
-by browsing all the zeroconf adverts for your network:
-
-~~~~
-$ avahi-browse --all | grep gangserver
-+  wlan0 IPv6 gangserver                                    _http._tcp     local
-+  wlan0 IPv4 gangserver                                    _http._tcp     local
-(hit ctrl-c to exit)
-~~~~
+machine with a known IP. However, knowing the IP of the server is very
+useful for viewing reports, so perhaps put it on a static IP anyway.
 
 Installation: Gang Scan
 =======================

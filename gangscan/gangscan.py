@@ -17,6 +17,7 @@ import os
 import psutil
 import requests
 import select
+import socket
 import spidev
 import subprocess
 import sys
@@ -56,7 +57,7 @@ def new_icon(icon, font, inset):
 
 util.log('Started')
 
-# Makr sure we're using supported hardware
+# Make sure we're using supported hardware
 product, version = util.hardware_ident()
 util.log('Hardware product is: "%s"' % product)
 util.log('Hardware version is: "%s"' % version)
@@ -97,8 +98,14 @@ for proc in psutil.process_iter():
             util.log('Found stale process: %s' % pinfo)
             os.kill(pinfo['pid'], 9)
 
+# Start listening for gangserver announcements
+announce = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+announce.bind(('', 5000))
+
 # Determine our network info
 ipaddress, macaddress = util.ifconfig()
+server_address = None
+server_port = None
 
 # Read config from server, if required
 config = {}
@@ -106,10 +113,6 @@ config_path = os.path.expanduser('~/.gangscan.json')
 if os.path.exists(config_path):
     with open(config_path) as f:
         config = json.loads(f.read())
-
-# Ensure an updated config if there is one
-connected, config, server_addres, server_port = \
-    util.heartbeat_and_update_config('gangscan', config)
 
 # Create the file queue
 queue = filequeue.FileQueue(
@@ -246,11 +249,9 @@ try:
 
         if not connected:
             util.log('Not connected, looking for a server')
-            server_address, server_port = util.lookup_server()
-            if server_address and server_port:
-                connected = True
 
-        if len(select.select([pipe_read], [], [], 0)[0]) == 1:
+        readable = select.select([pipe_read, announce], [], [], 0)[0]
+        if pipe_read in readable:
             scan = reader_flo.readline().rstrip('\n')
             util.log('RFID reader said: %s' % scan)
 
@@ -291,6 +292,17 @@ try:
                 print('-' * 60)
                 sys.stdout.flush()
 
+        elif announce in readable:
+            try:
+                data = announce.recvfrom(100)[0].decode('utf-8')
+                util.log('Received gangserver announcement: %s' % data)
+                server_address_port = data.split(' ')[1]
+                server_address, server_port = server_address_port.split(':')
+                server_port = int(server_port)
+                connected = True
+            except Exception as e:
+                util.log('Announcement error: %s' % e)
+
         elif time.time() - last_netcheck_time > 30:
             # Determine IP address
             ipaddress = '...'
@@ -299,7 +311,8 @@ try:
 
             old_location = config['location']
             connected, config, server_address, server_port = \
-                util.heartbeat_and_update_config('gangscan', config)
+                util.heartbeat_and_update_config(
+                    'gangscan', config, server_address, server_port)
             if config and config['location'] != old_location:
                 images['location'] = new_icon(config['location'], text,
                                               (ICON_SIZE + 5) * 2)

@@ -25,10 +25,6 @@
   - name: update time
     command: ntpdate -s time.nist.gov
 
-  # Generic python dependancies
-  - name: install python zeroconf library
-    command: pip3 install -U zeroconf
-
   # SPI LCD library dependancies (the library itself isn't used)
   - name: install build-essential
     apt:

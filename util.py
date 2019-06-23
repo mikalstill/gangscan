@@ -37,21 +37,6 @@ def uptime():
     log(subprocess.check_output('/usr/bin/uptime', shell=True).decode('utf-8'))
 
 
-def lookup_server():
-    zc = zeroconf.Zeroconf()
-    si = zc.get_service_info('_http._tcp.local.',
-                             'gangserver._http._tcp.local.')
-    if si:
-        server_address = socket.inet_ntoa(si.address)
-        server_port = int(si.port)
-        log('Found server at %s:%d' %(server_address, server_port))
-        return server_address, server_port
-
-    else:
-        log('Server not found')
-        return None, None
-
-
 def heartbeat_server(address, port, deviceid):
     connected = False
     config = None
@@ -75,10 +60,9 @@ def heartbeat_server(address, port, deviceid):
     return connected, config
 
 
-def heartbeat_and_update_config(process, config):
+def heartbeat_and_update_config(process, config, server_address, server_port):
     config_path = os.path.expanduser('~/.%s.json' % process)
     ipaddress, macaddress = ifconfig()
-    server_address, server_port = lookup_server()
 
     connected = False
     if server_address:
