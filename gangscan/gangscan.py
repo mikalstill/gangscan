@@ -56,6 +56,17 @@ def new_icon(icon, font, inset):
 
 util.log('Started')
 
+# Makr sure we're using supported hardware
+product, version = util.hardware_ident()
+util.log('Hardware product is: "%s"' % product)
+util.log('Hardware version is: "%s"' % version)
+if product != 'GangScan':
+    util.log('Hardware product unsupported, aborting.')
+    sys.exit(1)
+if version != '0x0008':
+    util.log('Hardware version unsupported, aborting.')
+    sys.exit(1)
+
 # Setup GPIO
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)

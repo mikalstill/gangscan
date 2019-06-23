@@ -96,3 +96,20 @@ def heartbeat_and_update_config(process, config):
 def log(s):
     sys.stderr.write('%s\n' % s)
     sys.stderr.flush()
+
+
+def _safe_read_file(path):
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        return f.read()[:-1].rstrip()
+
+
+def hardware_ident():
+    if not os.path.exists('/proc/device-tree/hat'):
+        return None
+
+    product = _safe_read_file('/proc/device-tree/hat/product')
+    version = _safe_read_file('/proc/device-tree/hat/product_ver')
+
+    return product, version
