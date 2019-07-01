@@ -44,14 +44,24 @@ class Root(Resource):
         with open(os.path.expanduser('~/gangserver-status.json')) as f:
             status = json.loads(f.read())
 
+        # Determine possible statuses
+        statuses = []
+        for person in status:
+            if not status[person] in statuses:
+                statuses.append(status[person])
+
+        # Is a filter being used?
+        filter = request.args.get('filter')
+
         # Rearrange the data
         groups = []
         for group in groupings:
             members = []
             for person in groupings[group]:
                 where = status[person]
-                members.append({'name': person,
-                                'location': where})
+                if not filter or filter == where:
+                    members.append({'name': person,
+                                    'location': where})
 
             groups.append({
                 'name': group,
@@ -62,7 +72,8 @@ class Root(Resource):
         resp = Response(
             t.render(
                 timestamp=str(datetime.datetime.now()),
-                groups=groups
+                groups=groups,
+                statuses=sorted(statuses),
             ),
             mimetype='text/html')
         resp.status_code = 200

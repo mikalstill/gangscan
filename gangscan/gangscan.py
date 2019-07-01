@@ -116,7 +116,7 @@ if os.path.exists(config_path):
 
 # Create the file queue
 queue = filequeue.FileQueue(
-    os.path.expanduser('~/gangscan-%s' % config['device-name']))
+    os.path.expanduser('~/gangscan-%s' % config.get('device-name', 'unknown')))
 
 # Objects we need to draw things
 icons = ImageFont.truetype('gangscan/materialdesignicons-webfont.ttf',
@@ -136,7 +136,7 @@ for (icon_name, icon, font, inset) in [
         ('wifi_off', chr(0xf5aa), icons, 0),
         ('connect_on', chr(0xf1f5), icons, ICON_SIZE + 5),
         ('connect_off', chr(0xf1f8), icons, ICON_SIZE),
-        ('location', config['location'], text, (ICON_SIZE + 5) * 2)]:
+        ('location', config.get('location'), text, (ICON_SIZE + 5) * 2)]:
     images[icon_name] = new_icon(icon, font, inset)
     
 # Start the RFID reader process
@@ -144,7 +144,7 @@ for (icon_name, icon, font, inset) in [
 reader_flo = os.fdopen(pipe_read)
 reader = subprocess.Popen(('/usr/bin/python3 gangscan/read_rfid.py '
                            '--presharedkey=%s --linger=1'
-                           % config['pre-shared-key']),
+                           % config.get('pre-shared-key', '')),
                           shell=True, stdout=pipe_write, stderr=pipe_write)
 
 last_scanned = None
@@ -200,7 +200,7 @@ def draw_status():
                        font=small_text)
 
     # Display recently scanned person
-    if time.time() - last_scanned_time < config['name-linger']:
+    if time.time() - last_scanned_time < config.get('name-linger', 5):
         font = giant_text
         if len(last_scanned) > 20:
             font = medium_text
@@ -270,8 +270,8 @@ try:
 
                     event_id = str(uuid.uuid4())
                     data['event_id'] = event_id
-                    data['location'] = config['location']
-                    data['device'] = config['device-name']
+                    data['location'] = config.get('location')
+                    data['device'] = config.get('device-name', 'unknown')
                     data['timestamp-device'] = time.time()
 
                     h = hashlib.sha256()
@@ -309,12 +309,12 @@ try:
             last_netcheck_time = time.time()
             ipaddress, _ = util.ifconfig()
 
-            old_location = config['location']
+            old_location = config.get('location')
             connected, config, server_address, server_port = \
                 util.heartbeat_and_update_config(
                     'gangscan', config, server_address, server_port)
-            if config and config['location'] != old_location:
-                images['location'] = new_icon(config['location'], text,
+            if config and config.get('location') != old_location:
+                images['location'] = new_icon(config.get('location'), text,
                                               (ICON_SIZE + 5) * 2)
 
         elif time.time() - last_status_time > 5:

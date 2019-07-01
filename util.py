@@ -39,7 +39,7 @@ def uptime():
 
 def heartbeat_server(address, port, deviceid):
     connected = False
-    config = None
+    config = {}
 
     if address and port:
         try:

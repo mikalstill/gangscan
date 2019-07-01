@@ -4,7 +4,14 @@
     <meta http-equiv="refresh" content="30">
   </head>
   <body>
-    {%- for grouping in groups %}
+    Filter: <a href="/">all</a>; 
+    {%- for status in statuses|sort %}
+    <a href="/?filter={{status}}">{{status}}</a>;
+    {%- endfor %}
+
+    <br/><br/>
+
+    {%- for grouping in groups|sort(attribute='name') %}
     <b>{{grouping.name}}</b>
     <ul>
       {%- for member in grouping.members %}
