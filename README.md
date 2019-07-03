@@ -121,6 +121,18 @@ developer software with Ansible like this:
 $ /usr/local/bin/ansible-playbook -i hosts deploy/eeprom_writer.yml
 ~~~~
 
+Now we can program some EEPROMs. You'll need to build a little programming
+circuit (see the notes below), and then run this tool:
+
+~~~~
+$ cd /home/pi/hats/eepromutils
+$ sudo sh eepflash.sh -w -f=/home/pi/gangscan/eeprom/eeprom_settings.eep \
+  -t=24c256 -d=1
+~~~~
+
+For more details about Raspberry Pi HAT EEPROMs, see my notes at
+https://www.madebymikal.com/raspberry-pi-hat-identity-eeproms-a-simple-guide/
+
 
 Credits
 =======
