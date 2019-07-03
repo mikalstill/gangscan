@@ -110,6 +110,18 @@ To see recent log messages from the server, do this:
 $ sudo journalctl -u gangserver
 ~~~~
 
+Hardware helpers
+================
+
+Gang Scan devices use an identity EEPROM to make sure the software is talking
+to the right version of the hardware. To program EEPROMs, install the
+developer software with Ansible like this:
+
+~~~~
+$ /usr/local/bin/ansible-playbook -i hosts deploy/eeprom_writer.yml
+~~~~
+
+
 Credits
 =======
 

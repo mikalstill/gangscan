@@ -1,0 +1,37 @@
+--- # Install gangscan on localhost
+- hosts: localhost
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  connection: local
+
+  tasks:
+  - include: includes/python_modern_pip.yml
+
+  # Install dependancies
+  - name: install git
+    apt:
+      name: git
+      state: latest
+
+  # We need to turn i2c on
+  - name: enable i2c
+    blockinfile:
+      dest: /boot/config.txt
+      marker: "# -- {mark} EEPROM ANSIBLE MANAGED BLOCK --"
+      block: |
+        # Enable i2c for HAT EEPROM programming
+        dtparam=i2c_arm=on
+        dtparam=i2c_vc=on
+      backup: no
+
+  # Fetch the EEPROM tools
+  - name: git fetch the eeprom tools
+    command: git clone https://github.com/raspberrypi/hats
+    args:
+      chdir: /home/pi
+
+  - name: compile the eeprom tools
+    command: make
+    args:
+      chdir: /home/pi/hats/eepromutils

@@ -92,7 +92,7 @@
   - name: enable PWM audio
     blockinfile:
       dest: /boot/config.txt
-      marker: "# -- {mark} ANSIBLE MANAGED BLOCK --"
+      marker: "# -- {mark} GANGSCAN ANSIBLE MANAGED BLOCK --"
       block: |
         # Enable PWM for audio, stereo on pins 18 and 13
         dtoverlay=pwm-2chan,pin=18,func=2,pin2=13,func2=4
