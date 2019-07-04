@@ -8,7 +8,6 @@ import requests
 import socket
 import subprocess
 import sys
-import zeroconf
 
 
 INET_RE = re.compile(' +inet ([^ ]+) .*')

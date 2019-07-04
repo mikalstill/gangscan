@@ -22,9 +22,6 @@
       name: ntpdate
       state: latest
 
-  - name: update time
-    command: ntpdate -s time.nist.gov
-
   # SPI LCD library dependancies (the library itself isn't used)
   - name: install build-essential
     apt:

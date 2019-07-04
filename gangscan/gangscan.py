@@ -136,7 +136,7 @@ for (icon_name, icon, font, inset) in [
         ('wifi_off', chr(0xf5aa), icons, 0),
         ('connect_on', chr(0xf1f5), icons, ICON_SIZE + 5),
         ('connect_off', chr(0xf1f8), icons, ICON_SIZE),
-        ('location', config.get('location'), text, (ICON_SIZE + 5) * 2)]:
+        ('location', config.get('location', '???'), text, (ICON_SIZE + 5) * 2)]:
     images[icon_name] = new_icon(icon, font, inset)
     
 # Start the RFID reader process
@@ -246,9 +246,6 @@ try:
                     util.log('Failed to stream queued event %s: %s'
                              %(event_id, e))
                     connected = False
-
-        if not connected:
-            util.log('Not connected, looking for a server')
 
         readable = select.select([pipe_read, announce], [], [], 0)[0]
         if pipe_read in readable:

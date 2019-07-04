@@ -85,7 +85,7 @@ ansible:
 $ /usr/local/bin/ansible-playbook -i hosts deploy/gangscan.yml
 ~~~~
 
-Because the ansible changes the boot configuraiton of the raspberry pi (it
+Because the ansible changes the boot configuration of the raspberry pi (it
 turns on SPI and PWN audio), you need to reboot before the scanner will work
 correctly:
 
