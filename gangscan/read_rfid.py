@@ -12,6 +12,8 @@ import RPi.GPIO as GPIO
 from pirc522 import RFID
 
 rdr = RFID(bus=0, device=1, pin_rst=16, pin_irq=19, pin_ce=7, pin_mode=GPIO.BCM)
+rdr.set_antenna_gain(6)
+rdr.init()
 util = rdr.util()
 util.debug = False
 
