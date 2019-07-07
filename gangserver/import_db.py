@@ -9,14 +9,15 @@
 
 import csv
 import json
+import sys
 
-with open('gangserver/status.json') as f:
+with open('/root/gangserver-status.json') as f:
     status = json.loads(f.read())
 
-with open('gangserver/groupings.json') as f:
+with open('/root/gangserver-groupings.json') as f:
     groupings = json.loads(f.read())
 
-with open('idcards/db.csv') as f:
+with open(sys.argv[1]) as f:
     csvreader = csv.DictReader(f)
     print('We have these fields: %s' % csvreader.fieldnames)
     for row in csvreader:
@@ -37,8 +38,8 @@ with open('idcards/db.csv') as f:
         if not owner in groupings[row['Patrol']]:
             groupings[row['Patrol']].append(owner)
 
-with open('gangserver/status.json', 'w') as f:
+with open('/root/gangserver-status.json', 'w') as f:
     f.write(json.dumps(status, indent=4, sort_keys=True))
 
-with open('gangserver/groupings.json', 'w') as f:
+with open('/root/gangserver-groupings.json', 'w') as f:
     f.write(json.dumps(groupings, indent=4, sort_keys=True))
