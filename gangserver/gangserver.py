@@ -16,6 +16,7 @@ from flask_restful import Resource
 
 from jinja2 import Template
 
+import eventlog
 import filequeue
 import util
 
@@ -32,6 +33,7 @@ with open(os.path.expanduser('~/gangserver-config.json')) as f:
 
 queue = filequeue.FileQueue(os.path.expanduser('~/gangserver-%s' % macaddress))
 mimetypes.init()
+event_log = eventlog.Log(os.path.expanduser('~/gangserver-eventlog.sqlite'))
 
 
 class Root(Resource):
@@ -134,6 +136,13 @@ class Event(Resource):
 
         util.log('Stored event %s: %s' %(event_id, data))
         self.queue.store_event('received', event_id, data)
+
+        event_log.add(event_id, data['cardid'], data['device'],
+                      data['location'], data['owner'],
+                      data['timestamp-device'], data['timestamp-server'])
+        queue.change_state('received', 'logged', event_id)
+        util.log('Logged event %s' % event_id)
+
         return {event_id: data}
 
 
@@ -142,5 +151,23 @@ api.add_resource(Local, '/local/<string:path>')
 api.add_resource(Health, '/health/<string:device>')
 api.add_resource(Event, '/event/<string:event_id>')
 
+# Process old received events
+queue = filequeue.FileQueue(os.path.expanduser('~/gangserver-%s'
+                                               % macaddress))
+
+util.log('There are %d old events' % queue.count_events('received'))
+event_id = queue.get_event('received')
+while event_id:
+    data = queue.read_event('received', event_id)
+    event_log.add(event_id, data['cardid'], data['device'],
+                  data['location'], data['owner'],
+                  data['timestamp-device'], data['timestamp-server'])
+    queue.change_state('received', 'logged', event_id)
+    util.log('Logged old event %s' % event_id)
+
+    event_id = queue.get_event('received')
+
+
 if __name__ == '__main__':
+    # Note this is not run with the flask task runner...
     app.run(host='0.0.0.0', debug=True)
