@@ -15,7 +15,7 @@
     <b>{{grouping.name}}</b>
     <ul>
       {%- for member in grouping.members %}
-      <li><img src="/local/{{member.location}}.png" title="{{member.location}}"> {{member.name}}
+      <li><img src="/local/{{member.location}}.png" title="{{member.location}}"> <a href="/eventlog?filter={{member.name}}">{{member.name}}</a>
 	{%- endfor %}
     </ul>
     {%- endfor %}
