@@ -88,8 +88,15 @@ class EventLog(Resource):
         with open('gangserver/eventlog.html.tmpl') as f:
             t = Template(f.read())
 
+        # Is a filter being used?
+        filter = request.args.get('filter')
+        if filter:
+            query = event_log.list_one(filter)
+        else:
+            query = event_log.list_all()
+
         rows = []
-        for row in event_log.list_all():
+        for row in query:
             row['timestamp'] = datetime.datetime.fromtimestamp(
                 row['timestamp_device'])
             rows.append(row)

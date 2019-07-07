@@ -58,3 +58,16 @@ class Log(object):
             yield row
 
         conn.close()
+
+    def list_one(self, owner):
+        conn = sqlite3.connect(self.path)
+        conn.row_factory = dict_factory
+
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM events WHERE owner=? '
+                       'ORDER BY timestamp_device DESC '
+                       'LIMIT 300;', [owner])
+        for row in cursor.fetchall():
+            yield row
+
+        conn.close()
