@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title>Add a user</title>
+  </head>
+  <body>
+
+    <font color=red>{{message}}</font>
+
+    <br/><br/>
+    
+<form action="/adduser" method="post">
+  Username:<br>
+  <input type="text" name="username" value="">
+  <br>
+  Password:<br>
+  <input type="password" name="password1" value="">
+  <br>
+  Password again:<br>
+  <input type="password" name="password2" value="">
+  <br><br>
+  <input type="submit" value="Add user">
+</form>
+
+  </body>
+</html>

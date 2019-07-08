@@ -86,6 +86,48 @@ class Root(flask_restful.Resource):
         resp.status_code = 200
         return resp
 
+class AddUser(flask_restful.Resource):
+    def get(self):
+        return self._get_with_message('')
+
+    def _get_with_message(self, message):
+        # Read template and data
+        with open('gangserver/adduser.html.tmpl') as f:
+            t = jinja2.Template(f.read())
+
+        # Do a dance to return HTML not JSON
+        resp = flask.Response(
+            t.render(message=message),
+            mimetype='text/html')
+        resp.status_code = 200
+        return resp
+
+    def post(self):
+        username = flask.request.form['username']
+        password1 = flask.request.form['password1']
+        password2 = flask.request.form['password2']
+
+        if username in config.get('users', {}):
+            util.log('User %s already exists' % username)
+            return self._get_with_message('User %s already exists.'
+                                          % username)
+
+        if password1 != password2:
+            util.log('Passwords for %s do not match' % username)
+            return self._get_with_message('Passwords did not match.')
+
+        h = hashlib.sha256()
+        h.update(password1.encode('utf-8'))
+        h.update(config['pre-shared-key'].encode('utf-8'))
+        signature = h.hexdigest()
+
+        config['users'][username] = signature
+        with open(os.path.expanduser('~/gangserver-config.json'), 'w') as f:
+            f.write(json.dumps(config, indent=4, sort_keys=True))
+
+        return flask.redirect('/')
+
+
 
 class Event(flask_restful.Resource):
     def put(self, event_id):
@@ -284,6 +326,7 @@ def process_event(data):
 
 
 api.add_resource(Root, '/')
+api.add_resource(AddUser, '/adduser')
 api.add_resource(Event, '/event/<string:event_id>')
 api.add_resource(EventLog, '/eventlog')
 api.add_resource(Health, '/health/<string:device>')
