@@ -18,7 +18,18 @@ def ifconfig():
     ipaddress = '...'
     macaddress = '...'
 
-    ifconfig = subprocess.check_output('/sbin/ifconfig wlan0', shell=True)
+    # Determine the interface to look inspect
+    uname = subprocess.check_output('uname').rstrip()
+    log('Uname says "%s"' % uname)
+    if uname == b'Linux':
+        interface = 'wlan0'
+    elif uname == b'Darwin':
+        interface = 'en0'
+    else:
+        interface = 'eth0'
+
+    ifconfig = subprocess.check_output('/sbin/ifconfig %s' % interface,
+                                       shell=True)
     for line in ifconfig.decode('utf-8').split('\n'):
         m = INET_RE.match(line)
         if m:
