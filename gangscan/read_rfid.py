@@ -60,6 +60,9 @@ reader = None
 
 run = True
 while run:
+    # Reset reader
+    rdr.init()
+
     # Wait for a tag to appear
     rdr.wait_for_tag()
     log('Detected card')
