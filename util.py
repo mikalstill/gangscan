@@ -38,7 +38,7 @@ def uptime():
 
 def heartbeat_server(address, port, deviceid):
     connected = False
-    config = {}
+    config = None
 
     if address and port:
         try:
@@ -57,23 +57,6 @@ def heartbeat_server(address, port, deviceid):
         log('Not connectivity checking a missing server')
 
     return connected, config
-
-
-def heartbeat_and_update_config(process, config, server_address, server_port):
-    config_path = os.path.expanduser('~/.%s.json' % process)
-    ipaddress, macaddress = ifconfig()
-
-    connected = False
-    if server_address:
-        connected, config = heartbeat_server(server_address, server_port,
-                                             macaddress)
-
-        if connected and config:
-            with open(config_path, 'w') as f:
-                f.write(json.dumps(config, indent=4, sort_keys=True))
-
-    log('Heartbeat is returning this config: %s' % config)
-    return connected, config, server_address, server_port
 
 
 def log(s):

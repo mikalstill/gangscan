@@ -2,7 +2,6 @@
 
 # This code is derived from the work of BehindTheSciences.com and Brian Lavery
 
-#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -31,6 +30,7 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
+import configcache
 import filequeue
 from lib_tft24T import TFT24T
 import util
@@ -102,21 +102,12 @@ for proc in psutil.process_iter():
 announce = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 announce.bind(('', 5000))
 
-# Determine our network info
-ipaddress, macaddress = util.ifconfig()
-server_address = None
-server_port = None
-
-# Read config from server, if required
-config = {}
-config_path = os.path.expanduser('~/.gangscan.json')
-if os.path.exists(config_path):
-    with open(config_path) as f:
-        config = json.loads(f.read())
+# Configuration
+cm = configcache.ConfigManager()
 
 # Create the file queue
 queue = filequeue.FileQueue(
-    os.path.expanduser('~/gangscan-%s' % config.get('device-name', 'unknown')))
+    os.path.expanduser('~/gangscan-%s' % cm.get('device-name', 'unknown')))
 
 # Objects we need to draw things
 icons = ImageFont.truetype('gangscan/materialdesignicons-webfont.ttf',
@@ -136,7 +127,7 @@ for (icon_name, icon, font, inset) in [
         ('wifi_off', chr(0xf5aa), icons, 0),
         ('connect_on', chr(0xf1f5), icons, ICON_SIZE + 5),
         ('connect_off', chr(0xf1f8), icons, ICON_SIZE),
-        ('location', config.get('location', '???'), text, (ICON_SIZE + 5) * 2)]:
+        ('location', cm.get('location', '???'), text, (ICON_SIZE + 5) * 2)]:
     images[icon_name] = new_icon(icon, font, inset)
     
 # Start the RFID reader process
@@ -144,14 +135,13 @@ for (icon_name, icon, font, inset) in [
 reader_flo = os.fdopen(pipe_read)
 reader = subprocess.Popen(('/usr/bin/python3 gangscan/read_rfid.py '
                            '--presharedkey=%s --linger=1'
-                           % config.get('pre-shared-key', '')),
+                           % cm.get('pre-shared-key', '')),
                           shell=True, stdout=pipe_write, stderr=pipe_write)
 
 last_scanned = None
 last_scanned_time = 0
 last_status_time = 0
 
-ipaddress = '...'
 connected = False
 last_netcheck_time = 0
 
@@ -161,7 +151,7 @@ def draw_status():
     status = images['logo']
 
     # Paint status icons
-    if ipaddress != '...':
+    if cm.get('ipaddress') != '...':
         status = Image.alpha_composite(status, images['wifi_on'])
     else:
         status = Image.alpha_composite(status, images['wifi_off'])
@@ -193,14 +183,14 @@ def draw_status():
                        font=small_text)
 
     # Display network address
-    width, height = status_writer.textsize(ipaddress, font=small_text)
+    width, height = status_writer.textsize(cm.get('ipaddress'), font=small_text)
     status_writer.text(((320 - width) / 2, 240 - (ICON_SIZE / 2) - 5),
-                       ipaddress,
+                       cm.get('ipaddress'),
                        fill='black',
                        font=small_text)
 
     # Display recently scanned person
-    if time.time() - last_scanned_time < config.get('name-linger', 5):
+    if time.time() - last_scanned_time < cm.get('name-linger', 5):
         font = giant_text
         if len(last_scanned) > 20:
             font = medium_text
@@ -235,7 +225,8 @@ try:
                 data['timestamp-transferred'] = time.time()
                 try:
                     r = requests.put('http://%s:%d/event/%s'
-                                     %(server_address, server_port,
+                                     %(cm.get('server_address'),
+                                       cm.get('server_port'),
                                        event_id),
                                      data={'data': json.dumps(data)})
                     if r.status_code == 200:
@@ -267,8 +258,8 @@ try:
 
                     event_id = str(uuid.uuid4())
                     data['event_id'] = event_id
-                    data['location'] = config.get('location')
-                    data['device'] = config.get('device-name', 'unknown')
+                    data['location'] = cm.get('location')
+                    data['device'] = cm.get('device-name', 'unknown')
                     data['timestamp-device'] = time.time()
 
                     h = hashlib.sha256()
@@ -297,21 +288,21 @@ try:
                 server_address, server_port = server_address_port.split(':')
                 server_port = int(server_port)
                 connected = True
+
+                cm.set('server_address', server_address)
+                cm.set('server_port', server_port)
             except Exception as e:
                 util.log('Announcement error: %s' % e)
 
         elif time.time() - last_netcheck_time > 30:
             # Determine IP address
-            ipaddress = '...'
             last_netcheck_time = time.time()
-            ipaddress, _ = util.ifconfig()
+            old_location = cm.get('location')
 
-            old_location = config.get('location')
-            connected, config, server_address, server_port = \
-                util.heartbeat_and_update_config(
-                    'gangscan', config, server_address, server_port)
-            if config and config.get('location') != old_location:
-                images['location'] = new_icon(config.get('location'), text,
+            cm.heartbeat()
+
+            if cm.get('location') != old_location:
+                images['location'] = new_icon(cm.get('location'), text,
                                               (ICON_SIZE + 5) * 2)
 
         elif time.time() - last_status_time > 5:
