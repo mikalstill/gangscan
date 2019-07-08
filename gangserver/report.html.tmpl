@@ -4,6 +4,10 @@
     <meta http-equiv="refresh" content="30">
   </head>
   <body>
+    You are logged in as {{username}}.
+
+    <br/>
+
     Filter: <a href="/">all</a>; 
     {%- for status in statuses|sort %}
     <a href="/?filter={{status}}">{{status}}</a>;

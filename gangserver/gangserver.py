@@ -14,15 +14,17 @@ import filequeue
 import util
 
 
+# Read config and data
+with open(os.path.expanduser('~/gangserver-config.json')) as f:
+    config = json.loads(f.read())
+
+
 app = flask.Flask(__name__)
+app.secret_key = config['pre-shared-key']
 api = flask_restful.Api(app)
 
 
 ipaddress, macaddress = util.ifconfig()
-
-# Read config and data
-with open(os.path.expanduser('~/gangserver-config.json')) as f:
-    config = json.loads(f.read())
 
 queue = filequeue.FileQueue(os.path.expanduser('~/gangserver-%s' % macaddress))
 mimetypes.init()
@@ -31,6 +33,12 @@ event_log = eventlog.Log(os.path.expanduser('~/gangserver-eventlog.sqlite'))
 
 class Root(flask_restful.Resource):
     def get(self):
+        # Determine username
+        if 'username' in flask.session:
+            username = flask.escape(flask.session['username'])
+        else:
+            return flask.redirect('/login')
+
         # Read template and data
         with open('gangserver/report.html.tmpl') as f:
             t = jinja2.Template(f.read())
@@ -69,6 +77,7 @@ class Root(flask_restful.Resource):
                 timestamp=str(datetime.datetime.now()),
                 groups=groups,
                 statuses=sorted(statuses),
+                username=username,
             ),
             mimetype='text/html')
         resp.status_code = 200
