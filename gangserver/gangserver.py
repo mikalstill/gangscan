@@ -82,59 +82,6 @@ class Root(Resource):
         return resp
 
 
-class EventLog(Resource):
-    def get(self):
-        # Read template and data
-        with open('gangserver/eventlog.html.tmpl') as f:
-            t = Template(f.read())
-
-        # Is a filter being used?
-        filter = request.args.get('filter')
-        if filter:
-            query = event_log.list_one(filter)
-        else:
-            query = event_log.list_all()
-
-        rows = []
-        for row in query:
-            row['timestamp'] = datetime.datetime.fromtimestamp(
-                row['timestamp_device'])
-            rows.append(row)
-
-        # Do a dance to return HTML not JSON
-        resp = Response(
-            t.render(
-                timestamp=str(datetime.datetime.now()),
-                rows=rows,
-            ),
-            mimetype='text/html')
-        resp.status_code = 200
-        return resp
-
-
-class Local(Resource):
-    def get(self, path):
-        filepath = os.path.join('gangserver/local', path.replace('..', ''))
-        if not os.path.exists(filepath):
-            abort(404)
-
-        mime = mimetypes.MimeTypes().guess_type(filepath)[0]
-        return send_file(
-            os.path.join('local', path),
-            mimetype=mime)
-
-
-class Health(Resource):
-    def get(self, device):
-        util.log('Health check from %s' % device)
-        returned_config = {'device-name': device,
-                           'location': config['devices'].get(device, '???'),
-                           'pre-shared-key': config['pre-shared-key'],
-                           'name-linger': config['name-linger']}
-        util.log('Returning config: %s' % returned_config)
-        return returned_config
-
-
 class Event(Resource):
     def __init__(self):
         self.queue = filequeue.FileQueue(
@@ -176,11 +123,64 @@ class Event(Resource):
         return {event_id: data}
 
 
+class EventLog(Resource):
+    def get(self):
+        # Read template and data
+        with open('gangserver/eventlog.html.tmpl') as f:
+            t = Template(f.read())
+
+        # Is a filter being used?
+        filter = request.args.get('filter')
+        if filter:
+            query = event_log.list_one(filter)
+        else:
+            query = event_log.list_all()
+
+        rows = []
+        for row in query:
+            row['timestamp'] = datetime.datetime.fromtimestamp(
+                row['timestamp_device'])
+            rows.append(row)
+
+        # Do a dance to return HTML not JSON
+        resp = Response(
+            t.render(
+                timestamp=str(datetime.datetime.now()),
+                rows=rows,
+            ),
+            mimetype='text/html')
+        resp.status_code = 200
+        return resp
+
+
+class Health(Resource):
+    def get(self, device):
+        util.log('Health check from %s' % device)
+        returned_config = {'device-name': device,
+                           'location': config['devices'].get(device, '???'),
+                           'pre-shared-key': config['pre-shared-key'],
+                           'name-linger': config['name-linger']}
+        util.log('Returning config: %s' % returned_config)
+        return returned_config
+
+
+class Local(Resource):
+    def get(self, path):
+        filepath = os.path.join('gangserver/local', path.replace('..', ''))
+        if not os.path.exists(filepath):
+            abort(404)
+
+        mime = mimetypes.MimeTypes().guess_type(filepath)[0]
+        return send_file(
+            os.path.join('local', path),
+            mimetype=mime)
+
+
 api.add_resource(Root, '/')
-api.add_resource(Local, '/local/<string:path>')
-api.add_resource(Health, '/health/<string:device>')
 api.add_resource(Event, '/event/<string:event_id>')
 api.add_resource(EventLog, '/eventlog')
+api.add_resource(Health, '/health/<string:device>')
+api.add_resource(Local, '/local/<string:path>')
 
 # Process old received events
 queue = filequeue.FileQueue(os.path.expanduser('~/gangserver-%s'
