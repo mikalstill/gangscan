@@ -51,7 +51,7 @@ class Root(flask_restful.Resource):
             status = json.loads(f.read())
 
         # Determine possible statuses
-        statuses = []
+        statuses = ['in', 'out']
         for person in status:
             if not status[person] in statuses:
                 statuses.append(status[person])
