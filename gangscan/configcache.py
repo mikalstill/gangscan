@@ -11,7 +11,7 @@ class ConfigManager(object):
         self.config = {}
         self.config_path = os.path.expanduser('~/.gangscan.json')
 
-        if os.path.exists(config_path):
+        if os.path.exists(self.config_path):
             with open(self.config_path) as f:
                 self.config = json.loads(f.read())
 
@@ -32,8 +32,8 @@ class ConfigManager(object):
 
         if self.config.get('server_address') and self.config.get('server_port'):
             connected, newconfig = util.heartbeat_server(
-                cm.get(server_address), cm.get(server_port),
-                cm.get(macaddress))
+                self.get('server_address'), self.get('server_port'),
+                self.get('macaddress'))
 
             if connected and newconfig:
                 for key in newconfig:
