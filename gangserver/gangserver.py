@@ -1,28 +1,21 @@
 #!/usr/bin/python3
 
 import datetime
+import flask
+import flask_restful
+import jinja2
 import json
 import mimetypes
 import os
 import time
-
-from flask import abort
-from flask import Flask
-from flask import Response
-from flask import request
-from flask import send_file
-from flask_restful import Api
-from flask_restful import Resource
-
-from jinja2 import Template
 
 import eventlog
 import filequeue
 import util
 
 
-app = Flask(__name__)
-api = Api(app)
+app = flask.Flask(__name__)
+api = flask_restful.Api(app)
 
 
 ipaddress, macaddress = util.ifconfig()
@@ -36,11 +29,11 @@ mimetypes.init()
 event_log = eventlog.Log(os.path.expanduser('~/gangserver-eventlog.sqlite'))
 
 
-class Root(Resource):
+class Root(flask_restful.Resource):
     def get(self):
         # Read template and data
         with open('gangserver/report.html.tmpl') as f:
-            t = Template(f.read())
+            t = jinja2.Template(f.read())
         with open(os.path.expanduser('~/gangserver-groupings.json')) as f:
             groupings = json.loads(f.read())
         with open(os.path.expanduser('~/gangserver-status.json')) as f:
@@ -53,7 +46,7 @@ class Root(Resource):
                 statuses.append(status[person])
 
         # Is a filter being used?
-        filter = request.args.get('filter')
+        filter = flask.request.args.get('filter')
 
         # Rearrange the data
         groups = []
@@ -71,7 +64,7 @@ class Root(Resource):
             })
 
         # Do a dance to return HTML not JSON
-        resp = Response(
+        resp = flask.Response(
             t.render(
                 timestamp=str(datetime.datetime.now()),
                 groups=groups,
@@ -82,13 +75,13 @@ class Root(Resource):
         return resp
 
 
-class Event(Resource):
+class Event(flask_restful.Resource):
     def __init__(self):
         self.queue = filequeue.FileQueue(
             os.path.expanduser('~/gangserver-%s' % macaddress))
 
     def put(self, event_id):
-        data = json.loads(request.form['data'])
+        data = json.loads(flask.request.form['data'])
         data['timestamp-server'] = time.time()
 
         # Events look like this:
@@ -123,14 +116,14 @@ class Event(Resource):
         return {event_id: data}
 
 
-class EventLog(Resource):
+class EventLog(flask_restful.Resource):
     def get(self):
         # Read template and data
         with open('gangserver/eventlog.html.tmpl') as f:
-            t = Template(f.read())
+            t = jinja2.Template(f.read())
 
         # Is a filter being used?
-        filter = request.args.get('filter')
+        filter = flask.request.args.get('filter')
         if filter:
             query = event_log.list_one(filter)
         else:
@@ -143,7 +136,7 @@ class EventLog(Resource):
             rows.append(row)
 
         # Do a dance to return HTML not JSON
-        resp = Response(
+        resp = flask.Response(
             t.render(
                 timestamp=str(datetime.datetime.now()),
                 rows=rows,
@@ -153,7 +146,7 @@ class EventLog(Resource):
         return resp
 
 
-class Health(Resource):
+class Health(flask_restful.Resource):
     def get(self, device):
         util.log('Health check from %s' % device)
         returned_config = {'device-name': device,
@@ -164,14 +157,14 @@ class Health(Resource):
         return returned_config
 
 
-class Local(Resource):
+class Local(flask_restful.Resource):
     def get(self, path):
         filepath = os.path.join('gangserver/local', path.replace('..', ''))
         if not os.path.exists(filepath):
-            abort(404)
+            flask.abort(404)
 
         mime = mimetypes.MimeTypes().guess_type(filepath)[0]
-        return send_file(
+        return flask.send_file(
             os.path.join('local', path),
             mimetype=mime)
 
