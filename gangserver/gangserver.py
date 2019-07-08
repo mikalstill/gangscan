@@ -3,6 +3,7 @@
 import datetime
 import flask
 import flask_restful
+import hashlib
 import jinja2
 import json
 import mimetypes
@@ -33,7 +34,7 @@ event_log = eventlog.Log(os.path.expanduser('~/gangserver-eventlog.sqlite'))
 
 class Root(flask_restful.Resource):
     def get(self):
-        # Determine username
+        # Enforce logins
         if 'username' in flask.session:
             username = flask.escape(flask.session['username'])
         else:
@@ -127,6 +128,12 @@ class Event(flask_restful.Resource):
 
 class EventLog(flask_restful.Resource):
     def get(self):
+        # Enforce logins
+        if 'username' in flask.session:
+            username = flask.escape(flask.session['username'])
+        else:
+            return flask.redirect('/login')
+
         # Read template and data
         with open('gangserver/eventlog.html.tmpl') as f:
             t = jinja2.Template(f.read())
@@ -178,11 +185,63 @@ class Local(flask_restful.Resource):
             mimetype=mime)
 
 
+class Login(flask_restful.Resource):
+    def get(self):
+        return self._get_with_message('')
+
+    def _get_with_message(self, message):
+        # Read template and data
+        with open('gangserver/login.html.tmpl') as f:
+            t = jinja2.Template(f.read())
+
+        # Do a dance to return HTML not JSON
+        resp = flask.Response(
+            t.render(message=message),
+            mimetype='text/html')
+        resp.status_code = 200
+        return resp
+
+    def post(self):
+        username = flask.request.form['username']
+        password = flask.request.form['password']
+
+        if not username in config.get('users', {}):
+            util.log('User %s not found' % username)
+            return self._get_with_message('Incorrect username or password.')
+
+        h = hashlib.sha256()
+        h.update(password.encode('utf-8'))
+        h.update(config['pre-shared-key'].encode('utf-8'))
+        signature = h.hexdigest()
+
+        util.log('Auth for user %s, comparing %s with %s'
+                 %(username, config['users'].get(username), signature))
+        if signature != config['users'].get(username):
+            return self._get_with_message('Incorrect username or password.')
+
+        flask.session['username'] = username
+        return flask.redirect('/')
+
+
+class Logout(flask_restful.Resource):
+    def get(self):
+        # Enforce logins
+        if 'username' in flask.session:
+            username = flask.escape(flask.session['username'])
+        else:
+            return flask.redirect('/login')
+
+        flask.session.pop('username', None)
+        return flask.redirect('/login')
+
+
 api.add_resource(Root, '/')
 api.add_resource(Event, '/event/<string:event_id>')
 api.add_resource(EventLog, '/eventlog')
 api.add_resource(Health, '/health/<string:device>')
 api.add_resource(Local, '/local/<string:path>')
+api.add_resource(Login, '/login')
+api.add_resource(Logout, '/logout')
 
 # Process old received events
 queue = filequeue.FileQueue(os.path.expanduser('~/gangserver-%s'
