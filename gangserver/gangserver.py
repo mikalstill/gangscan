@@ -42,10 +42,21 @@ class Root(flask_restful.Resource):
         else:
             return flask.redirect('/login')
 
+        # Is a filter being used?
+        filter = flask.request.args.get('filter')
+
+        # Which set of groupings?
+        grouping = flask.request.args.get('grouping')
+        if grouping:
+            grouping_string = '-%s' % grouping
+        else:
+            grouping_string = ''
+
         # Read template and data
         with open('gangserver/report.html.tmpl') as f:
             t = jinja2.Template(f.read())
-        with open(os.path.expanduser('~/gangserver-groupings.json')) as f:
+        with open(os.path.expanduser('~/gangserver-groupings%s.json'
+                                     % grouping_string)) as f:
             groupings = json.loads(f.read())
         with open(os.path.expanduser('~/gangserver-status.json')) as f:
             status = json.loads(f.read())
@@ -55,9 +66,6 @@ class Root(flask_restful.Resource):
         for person in status:
             if not status[person] in statuses:
                 statuses.append(status[person])
-
-        # Is a filter being used?
-        filter = flask.request.args.get('filter')
 
         # Rearrange the data
         groups = []
