@@ -21,7 +21,7 @@
     <br/><br/>
 
     <table>
-      {%- for grouping in groups|sort(attribute='name') %}
+      {%- for grouping in groups %}
       <tr><td></td><td><b>{{grouping.name}}</b></td><td></td><td></td></tr>
 
       {%- for member in grouping.members %}

@@ -68,7 +68,8 @@ class Root(flask_restful.Resource):
                 statuses.append(status[person])
 
         # Rearrange the data
-        groups = []
+        priority_groups = []
+        support_groups = []
         for group in groupings:
             members = []
             for person in groupings[group]:
@@ -77,10 +78,24 @@ class Root(flask_restful.Resource):
                     members.append({'name': person,
                                     'location': where})
 
-            groups.append({
+            g = {
                 'name': group,
                 'members': members
-            })
+            }
+
+            if grouping:
+                # Virtual Amy means everything is a cast grouping
+                priority_groups.append(g)
+            elif group in config['priority-groups']:
+                priority_groups.append(g)
+            else:
+                support_groups.append(g)
+
+        # Merge the groups into a single list
+        util.log('I found these priority groups: %s' % priority_groups)
+        groups = []
+        groups.extend(priority_groups)
+        groups.extend(support_groups)
 
         # Do a dance to return HTML not JSON
         resp = flask.Response(
