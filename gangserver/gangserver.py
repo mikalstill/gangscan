@@ -92,7 +92,6 @@ class Root(flask_restful.Resource):
                 support_groups.append(g)
 
         # Merge the groups into a single list
-        util.log('I found these priority groups: %s' % priority_groups)
         groups = []
         groups.extend(priority_groups)
         groups.extend(support_groups)
