@@ -70,7 +70,7 @@ class Root(flask_restful.Resource):
         # Rearrange the data
         priority_groups = []
         support_groups = []
-        for group in groupings:
+        for group in sorted(groupings):
             members = []
             for person in groupings[group]:
                 where = status[person]
