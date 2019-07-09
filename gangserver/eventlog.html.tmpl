@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>Event Log</title>
+    <meta http-equiv="refresh" content="30">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <table><tr>
+	<td><b>Time</b></td>
+	<td><b>Person</b></td>
+	<td><b>Location</b></td>
+      </tr>
+      {%- for row in rows %}
+      <tr>
+	<td>{{row.timestamp}}</td>
+	<td>{{row.owner}}</td>
+	<td>{{row.location}}</td>
+      </tr>
+      {%- endfor %}
+    </table>
+
+    <br/><br/>
+
+    <i>Generated at {{timestamp}}.</i>
+  </body>
+</html>
