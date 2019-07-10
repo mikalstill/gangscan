@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import csv
 import datetime
 import flask
 import flask_restful
@@ -14,6 +15,7 @@ import uuid
 
 import eventlog
 import filequeue
+import pdf
 import util
 
 
@@ -149,6 +151,104 @@ class AddUser(flask_restful.Resource):
 
         return flask.redirect('/')
 
+
+class CreateBadge(flask_restful.Resource):
+    def get(self):
+        # Enforce logins
+        if 'username' in flask.session:
+            username = flask.escape(flask.session['username'])
+        else:
+            return flask.redirect('/login')
+
+        # Read template and data
+        with open('gangserver/createbadge.html.tmpl') as f:
+            t = jinja2.Template(f.read())
+
+        # Do a dance to return HTML not JSON
+        resp = flask.Response(
+            t.render(),
+            mimetype='text/html')
+        resp.status_code = 200
+        return resp
+
+    def post(self):
+        # Enforce logins
+        if 'username' in flask.session:
+            username = flask.escape(flask.session['username'])
+        else:
+            return flask.redirect('/login')
+
+        # Ensure we can parse the CSV
+        try:
+            s = flask.request.form['csv']
+            util.log('CSV is: %s' % s)
+            csvreader = csv.DictReader(s.split('\n'))
+        except Exception as e:
+            with open('gangserver/error.html.tmpl') as f:
+                t = jinja2.Template(f.read())
+            resp = flask.Response(
+                t.render(timestamp=str(datetime.datetime.now()),
+                         username=username,
+                         error=str(e)),
+                mimetype='text/html')
+            resp.status_code = 200
+            return resp
+
+        # Load current configuration
+        with open(os.path.expanduser('~/gangserver-status.json')) as f:
+            status = json.loads(f.read())
+
+        with open(os.path.expanduser('~/gangserver-groupings.json')) as f:
+            groupings = json.loads(f.read())
+
+        # Handle new users
+        output = []
+        cards = []
+        for row in csvreader:
+            util.log('New badge for: %s' % row)
+            owner = ''
+            if row['Preferred name'] != '':
+                owner += row['Preferred name']
+            else:
+                owner += row['Firstname']
+            owner += ' '
+            owner += row['Last name']
+
+            if not owner in status:
+                status[owner] = 'new'
+
+            if not row['Patrol'] in groupings:
+                groupings[row['Patrol']] = []
+                output.append('<li>Created patrol %s' % patrol)
+
+            if not owner in groupings[row['Patrol']]:
+                groupings[row['Patrol']].append(owner)
+                output.append('<li>Created member %s' % owner)
+
+            cards.append(row)
+
+        # Update on disk configuration
+        with open(os.path.expanduser('~/gangserver-status.json'), 'w') as f:
+            f.write(json.dumps(status, indent=4, sort_keys=True))
+
+        with open(os.path.expanduser('~/gangserver-groupings.json'), 'w') as f:
+            f.write(json.dumps(groupings, indent=4, sort_keys=True))
+
+        # Generate the PDF of badges
+        filename = pdf.makecards(cards).split('/')[-1]
+        output.append('<li>Badges are <a href="/local/%s">here</a>.'
+                      % filename)
+
+        # Write a little report
+        with open('gangserver/badges.html.tmpl') as f:
+            t = jinja2.Template(f.read())
+        resp = flask.Response(
+            t.render(timestamp=str(datetime.datetime.now()),
+                     username=username,
+                     output='\n'.join(output)),
+            mimetype='text/html')
+        resp.status_code = 200
+        return resp
 
 
 class Event(flask_restful.Resource):
@@ -349,6 +449,7 @@ def process_event(data):
 
 api.add_resource(Root, '/')
 api.add_resource(AddUser, '/adduser')
+api.add_resource(CreateBadge, '/createbadge')
 api.add_resource(Event, '/event/<string:event_id>')
 api.add_resource(EventLog, '/eventlog')
 api.add_resource(Health, '/health/<string:device>')

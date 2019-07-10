@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>Create badges</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    You are logged in as {{username}}. <a href="/logout">Log out</a>. <a href="/adduser">Add a user</a>.
+
+    <br/><br/>
+
+    <form action="/createbadge" method="post">
+<textarea rows="10" cols="80" name="csv">
+Firstname,Preferred name,Last name,Team,Patrol,Health
+Michael,Mikal,Still,Gentleman of Leisure,Juno,No
+</textarea>
+
+      <br/><br/>
+
+      <input type="submit" value="Create badges">
+    </form>
+
+    <br/><br/>
+
+    <i>Generated at {{timestamp}}.</i>
+  </body>
+</html>
