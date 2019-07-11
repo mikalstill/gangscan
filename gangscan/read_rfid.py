@@ -20,7 +20,7 @@ util.debug = False
 parser = argparse.ArgumentParser()
 parser.add_argument('--presharedkey')
 parser.add_argument('--linger', type=int)
-parser.add_argument('--debug', type=bool)
+parser.add_argument('--debug', dest='debug', action='store_true')
 args = parser.parse_args()
 
 
