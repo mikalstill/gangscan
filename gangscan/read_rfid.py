@@ -60,74 +60,70 @@ reader = None
 
 run = True
 while run:
-    # Reset reader
-    rdr.init()
-
     # Wait for a tag to appear
     rdr.wait_for_tag()
     log('Detected card')
 
-    # Read the tag
-    (error, data) = rdr.request()
-    if error:
-        log('Reader error')
-        continue
+    # There might be more than one card read per IRQ?
+    while True:
+        # Read the tag
+        (error, data) = rdr.request()
+        if error:
+            log('Reader error')
+            break
 
-    (error, uid) = rdr.anticoll()
-    if error:
-        log('Collision error')
-        continue
+        (error, uid) = rdr.anticoll()
+        if error:
+            log('Collision error')
+            continue
 
-    cardid = uid_to_num(uid)
+        cardid = uid_to_num(uid)
 
-    util.set_tag(uid)
-    util.auth(rdr.auth_a, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
-    log('Authenticate')
+        util.set_tag(uid)
+        util.auth(rdr.auth_a, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
+        log('Authenticate')
 
-    text = ''
-    for block in [8, 9, 10]:
-        error = util.do_auth(block)
-        if not error:
-            error, data = util.rfid.read(block)
-            for c in data:
-                text += chr(c)
-    util.deauth()
-    log('Read and deauth')
+        text = ''
+        for block in [8, 9, 10]:
+            error = util.do_auth(block)
+            if not error:
+                error, data = util.rfid.read(block)
+                for c in data:
+                    text += chr(c)
+        util.deauth()
+        log('Read and deauth')
 
-    if len(text.rstrip(' ')) == 0:
-        log('No data read')
-        continue
+        if len(text.rstrip(' ')) == 0:
+            log('No data read')
+            continue
 
-    # Verify the read data
-    try:
-        owner, sig = text.rstrip(' ').split(',')
+        # Verify the read data
+        try:
+            owner, sig = text.rstrip(' ').split(',')
 
-        h = hashlib.sha256()
-        h.update(owner.encode('utf-8'))
-        h.update(str(cardid).encode('utf-8'))
-        h.update(args.presharedkey.encode('utf-8'))
-        s = h.hexdigest()[-6:]
+            h = hashlib.sha256()
+            h.update(owner.encode('utf-8'))
+            h.update(str(cardid).encode('utf-8'))
+            h.update(args.presharedkey.encode('utf-8'))
+            s = h.hexdigest()[-6:]
 
-        outcome = True
-        if s != sig:
-            outcome = False
+            outcome = True
+            if s != sig:
+                outcome = False
 
-        data = {'cardid': cardid,
-                'owner': owner,
-                'sha': sig,
-                'outcome': outcome}
+            data = {'cardid': cardid,
+                    'owner': owner,
+                    'sha': sig,
+                    'outcome': outcome}
 
-        if last_read != data:
-            output(data)
-            last_read = data
-            last_read_time = time.time()
+            if last_read != data:
+                output(data)
+                last_read = data
+                last_read_time = time.time()
 
-        elif time.time() - last_read_time > args.linger - 1:
-            last_read = None
-            last_read_time = time.time()
+            elif time.time() - last_read_time > args.linger - 1:
+                last_read = None
+                last_read_time = time.time()
 
-    except Exception as e:
-        log('Exception: %s' % e)
-
-    # Take a nap
-    time.sleep(0.1)
+        except Exception as e:
+            log('Exception: %s' % e)
