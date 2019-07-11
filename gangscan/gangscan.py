@@ -10,6 +10,7 @@
 # furnished to do so.
 
 import datetime
+import fcntl
 import hashlib
 import json
 import os
@@ -132,11 +133,14 @@ for (icon_name, icon, font, inset) in [
     
 # Start the RFID reader process
 (pipe_read, pipe_write) = os.pipe()
-reader_flo = os.fdopen(pipe_read)
 reader = subprocess.Popen(('/usr/bin/python3 gangscan/read_rfid.py '
                            '--presharedkey=%s --linger=1'
                            % cm.get('pre-shared-key', '')),
                           shell=True, stdout=pipe_write, stderr=pipe_write)
+
+# Make the reader non-blocking
+flag = fcntl.fcntl(pipe_read, fcntl.F_GETFL)
+fcntl.fcntl(pipe_read, fcntl.F_SETFL, flag | os.O_NONBLOCK)
 
 last_scanned = None
 last_scanned_time = 0
@@ -216,6 +220,7 @@ def draw_status():
     TFT.display(status.rotate(90, resample=0, expand=1))
     util.uptime()
 
+reader_buffer = ''
 try:
     while reader.poll() is None:
         if connected:
@@ -240,45 +245,55 @@ try:
 
         readable = select.select([pipe_read, announce], [], [], 0)[0]
         if pipe_read in readable:
-            scan = reader_flo.readline().rstrip('\n')
-            util.log('RFID reader said: %s' % scan)
+            reader_buffer += os.read(pipe_read, 8192).decode('utf-8')
+            util.log('RFID data queued: %s' % reader_buffer)
 
-            if scan[0] == 'E':
-                last_scanned = '???'
-                last_scanned_time = time.time()
-                last_status_time = 0
-                continue
+            scans = reader_buffer.split('\n')
+            reader_buffer = ''
+            for scan in scans:
+                util.log('RFID scan: "%s"' % scan)
 
-            try:
-                data = json.loads(scan)
-                if data['outcome']:
-                    last_scanned = data['owner']
+            if len(scans[-1]) > 0:
+                reader_buffer = scans[-1]
+            util.log('RFID data queued: %s' % reader_buffer)
+
+            for scan in scans[:-1]:
+                if scan[0] == 'E':
+                    last_scanned = '???'
                     last_scanned_time = time.time()
                     last_status_time = 0
+                    continue
 
-                    event_id = str(uuid.uuid4())
-                    data['event_id'] = event_id
-                    data['location'] = cm.get('location')
-                    data['device'] = cm.get('device-name', 'unknown')
-                    data['timestamp-device'] = time.time()
+                try:
+                    data = json.loads(scan)
+                    if data['outcome']:
+                        last_scanned = data['owner']
+                        last_scanned_time = time.time()
+                        last_status_time = 0
 
-                    h = hashlib.sha256()
-                    for key in data:
-                        s = '%s:%s' %(key, data[key])
-                        h.update(s.encode('utf-8'))
-                    data['signature'] = h.hexdigest()
+                        event_id = str(uuid.uuid4())
+                        data['event_id'] = event_id
+                        data['location'] = cm.get('location')
+                        data['device'] = cm.get('device-name', 'unknown')
+                        data['timestamp-device'] = time.time()
 
-                    queue.store_event('new', event_id, data)
+                        h = hashlib.sha256()
+                        for key in data:
+                            s = '%s:%s' %(key, data[key])
+                            h.update(s.encode('utf-8'))
+                        data['signature'] = h.hexdigest()
 
-                    util.log('Forced update of status screen')
-                    draw_status()
+                        queue.store_event('new', event_id, data)
 
-            except Exception as e:
-                util.log('Ignoring malformed data: %s' % e)
-                print('-' * 60)
-                traceback.print_exc(file=sys.stdout)
-                print('-' * 60)
-                sys.stdout.flush()
+                        util.log('Forced update of status screen')
+                        draw_status()
+
+                except Exception as e:
+                    util.log('Ignoring malformed data: %s' % e)
+                    print('-' * 60)
+                    traceback.print_exc(file=sys.stdout)
+                    print('-' * 60)
+                    sys.stdout.flush()
 
         elif announce in readable:
             try:
