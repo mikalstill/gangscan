@@ -219,7 +219,7 @@ class CreateBadge(flask_restful.Resource):
 
             if not row['Patrol'] in groupings:
                 groupings[row['Patrol']] = []
-                output.append('<li>Created patrol %s' % patrol)
+                output.append('<li>Created patrol %s' % row['Patrol'])
 
             if not owner in groupings[row['Patrol']]:
                 groupings[row['Patrol']].append(owner)
